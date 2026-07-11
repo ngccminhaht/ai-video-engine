@@ -49,5 +49,11 @@ desktop.ini
 htmlcov/
 .pytest_cache/
 
+# Node.js / Frontend
+node_modules/
+.next/
+.turbo/
+*.tsbuildinfo
+
 # Misc
 *.log
