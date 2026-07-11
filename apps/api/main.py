@@ -12,12 +12,29 @@ from apps.api.routers import health, jobs, models
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan: startup and shutdown logic."""
+    import logging
+
+    from core.job_queue import close_pool, init_pool
+
+    logger = logging.getLogger(__name__)
     settings = get_settings()
+
     # Ensure storage directories exist
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
     settings.output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Connect to Redis (arq job queue)
+    try:
+        await init_pool()
+        logger.info("Redis job queue connected")
+    except Exception as e:
+        logger.warning(f"Redis unavailable — jobs will stay in 'pending' status: {e}")
+
     yield
+
     # Cleanup on shutdown
+    await close_pool()
+
     from core.database import engine
 
     await engine.dispose()
