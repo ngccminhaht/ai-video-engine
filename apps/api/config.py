@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     output_dir: Path = Path("outputs")
     max_upload_size_mb: int = 100
 
+    # Auth
+    jwt_secret: str = "dev-secret-change-in-production-please"
+    require_auth: bool = False  # Feature flag: set True to enforce auth on all endpoints
+    cors_origins: str = "*"  # Comma-separated list of allowed origins. Restrict in production.
+
     # Worker
     worker_concurrency: int = 1
     job_timeout_seconds: int = 600  # 10 minutes default

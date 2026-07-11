@@ -2,6 +2,7 @@
 @import "tailwindcss/theme" theme(reference);
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant admin (&:is(.admin-theme *));
 
 @theme inline {
   --color-background: var(--background);
@@ -32,11 +33,186 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  /* Admin theme extended tokens */
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-tertiary: var(--surface-tertiary);
+  --color-surface-hover: var(--surface-hover);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
 }
 
+/* ═══════════════════════════════════════════
+   Light Theme (default — end-user, public)
+   ═══════════════════════════════════════════ */
 :root {
   --radius: 0.625rem;
-  /* Dark theme by default - matching the mockup */
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #111111;
+  --primary-foreground: #ffffff;
+  --secondary: #f7f7f7;
+  --secondary-foreground: #0a0a0a;
+  --muted: #f7f7f7;
+  --muted-foreground: #666666;
+  --accent: #f7f7f7;
+  --accent-foreground: #0a0a0a;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #111111;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0a0a0a;
+  --sidebar-border: #e5e5e5;
+  --sidebar-accent: #111111;
+  --sidebar-accent-foreground: #ffffff;
+
+  /* Defaults for extended tokens (light) */
+  --primary-soft: #f7f7f7;
+  --primary-subtle: #fafafa;
+  --surface-secondary: #f7f7f7;
+  --surface-tertiary: #f0f0f0;
+  --surface-hover: #fafafa;
+  --success: #178553;
+  --success-soft: #eaf8f1;
+  --warning: #b66a00;
+  --warning-soft: #fff5df;
+  --danger: #dc2626;
+  --danger-soft: #fff0ef;
+  --info: #3568b8;
+  --info-soft: #eef4ff;
+}
+
+/* ═══════════════════════════════════════════
+   Admin Theme — Red-White Creative Studio
+   Applied via class="admin-theme" on layout
+   ═══════════════════════════════════════════ */
+.admin-theme {
+  --radius: 0.75rem;
+
+  /* Application backgrounds */
+  --background: #F8F5F4;
+  --foreground: #241719;
+
+  /* Surfaces / Cards */
+  --card: #FFFFFF;
+  --card-foreground: #241719;
+  --popover: #FFFFFF;
+  --popover-foreground: #241719;
+
+  /* Brand / Primary */
+  --primary: #C5242D;
+  --primary-foreground: #FFFFFF;
+  --primary-soft: #FFF0F0;
+  --primary-subtle: #FFF8F7;
+
+  /* Secondary */
+  --secondary: #FFF8F7;
+  --secondary-foreground: #241719;
+
+  /* Muted */
+  --muted: #F3E9E9;
+  --muted-foreground: #847174;
+
+  /* Accent */
+  --accent: #FCEDEA;
+  --accent-foreground: #241719;
+
+  /* Destructive */
+  --destructive: #D92D20;
+  --destructive-foreground: #FFFFFF;
+
+  /* Borders */
+  --border: #EBDCDD;
+  --input: #EBDCDD;
+  --ring: #C5242D;
+
+  /* Sidebar — Burgundy */
+  --sidebar: #7F1D24;
+  --sidebar-foreground: #FDEBEC;
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+  --sidebar-accent: #FFFFFF;
+  --sidebar-accent-foreground: #9F1D26;
+
+  /* Extended surfaces */
+  --surface-secondary: #FFF8F7;
+  --surface-tertiary: #FCEDEA;
+  --surface-hover: #FFF3F2;
+
+  /* Semantic */
+  --success: #178553;
+  --success-soft: #EAF8F1;
+  --warning: #B66A00;
+  --warning-soft: #FFF5DF;
+  --danger: #D92D20;
+  --danger-soft: #FFF0EF;
+  --info: #3568B8;
+  --info-soft: #EEF4FF;
+
+  /* Admin-specific tokens */
+  --sidebar-surface: #8F222A;
+  --sidebar-hover: #A42A32;
+  --sidebar-active-bg: #FFFFFF;
+  --sidebar-active-text: #9F1D26;
+  --sidebar-text: #FDEBEC;
+  --sidebar-muted: #EAB7BA;
+
+  --header-background: #FFFFFF;
+  --header-border: #EBDCDD;
+
+  --text-primary: #241719;
+  --text-secondary: #625154;
+  --text-tertiary: #847174;
+  --text-muted: #A99699;
+
+  --border-default: #EBDCDD;
+  --border-subtle: #F3E9E9;
+  --border-strong: #DABFC1;
+  --border-focus: #C5242D;
+
+  --input-background: #FFFFFF;
+  --input-hover-background: #FFFCFB;
+  --input-disabled-background: #F1E9EA;
+  --input-placeholder: #A99699;
+
+  --primary-hover: #A91D25;
+  --primary-active: #8F1820;
+  --primary-border: #F3C4C6;
+
+  --focus-ring: rgba(197, 36, 45, 0.18);
+
+  --shadow-card:
+    0 1px 2px rgba(71, 24, 29, 0.04),
+    0 8px 24px rgba(71, 24, 29, 0.05);
+
+  --shadow-floating:
+    0 12px 32px rgba(71, 24, 29, 0.10);
+
+  --success-border: #B8E3CF;
+  --warning-border: #F2D49B;
+  --danger-border: #F4B8B3;
+  --info-border: #C8D8F1;
+}
+
+/* ═══════════════════════════════════════════
+   Dark Theme (kept for potential other use)
+   Applied via class="dark" on parent element
+   ═══════════════════════════════════════════ */
+.dark {
   --background: oklch(0.145 0.014 285.82);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.178 0.014 285.82);
@@ -61,8 +237,25 @@
   --sidebar-border: oklch(0.24 0.014 285.82);
   --sidebar-accent: oklch(0.62 0.19 264);
   --sidebar-accent-foreground: oklch(0.985 0 0);
+
+  --primary-soft: oklch(0.22 0.014 285.82);
+  --primary-subtle: oklch(0.18 0.014 285.82);
+  --surface-secondary: oklch(0.20 0.014 285.82);
+  --surface-tertiary: oklch(0.22 0.014 285.82);
+  --surface-hover: oklch(0.25 0.014 285.82);
+  --success: #34d399;
+  --success-soft: rgba(52, 211, 153, 0.1);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.1);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.1);
+  --info: #60a5fa;
+  --info-soft: rgba(96, 165, 250, 0.1);
 }
 
+/* ═══════════════════════════════════════════
+   Base Styles
+   ═══════════════════════════════════════════ */
 * {
   border-color: var(--border);
 }
@@ -70,10 +263,11 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
 }
 
-/* Scrollbar styling */
+/* ═══════════════════════════════════════════
+   Scrollbar Styling
+   ═══════════════════════════════════════════ */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -84,10 +278,86 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.3 0.014 285.82);
+  background: oklch(0.75 0 0);
   border-radius: 3px;
 }
 
+.admin-theme ::-webkit-scrollbar-thumb {
+  background: #DABFC1;
+}
+
+.admin-theme ::-webkit-scrollbar-thumb:hover {
+  background: #A99699;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: oklch(0.3 0.014 285.82);
+}
+
 ::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.6 0 0);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.4 0.014 285.82);
+}
+
+/* ═══════════════════════════════════════════
+   Admin Theme Utilities
+   ═══════════════════════════════════════════ */
+.admin-theme .shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+.admin-theme .shadow-floating {
+  box-shadow: var(--shadow-floating);
+}
+
+/* Focus ring utility */
+.admin-theme .focus-ring {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--focus-ring);
+}
+
+/* Range slider styling for admin theme */
+.admin-theme input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: #F2E3E4;
+  border-radius: 3px;
+  outline: none;
+}
+
+.admin-theme input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #C5242D;
+  cursor: pointer;
+  border: 3px solid white;
+  box-shadow: 0 1px 3px rgba(71, 24, 29, 0.2);
+}
+
+.admin-theme input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #C5242D;
+  cursor: pointer;
+  border: 3px solid white;
+  box-shadow: 0 1px 3px rgba(71, 24, 29, 0.2);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .admin-theme *,
+  .admin-theme *::before,
+  .admin-theme *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import JSON, DateTime, Float, Integer, String, Text, func
+from sqlalchemy import JSON, Boolean, DateTime, Float, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.database import Base
@@ -20,6 +20,10 @@ class Job(Base):
 
     status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
     # pending, queued, loading_model, processing, post_processing, completed, failed, cancelled
+
+    # Ownership
+    user_id: Mapped[Optional[str]] = mapped_column(String(26), nullable=True, index=True)
+    project_id: Mapped[Optional[str]] = mapped_column(String(26), nullable=True, index=True)
 
     # Model info
     model_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
@@ -53,6 +57,17 @@ class Job(Base):
 
     # Priority (lower = higher priority)
     priority: Mapped[int] = mapped_column(Integer, default=5)
+
+    # Progress tracking (for SSE/realtime)
+    progress: Mapped[int] = mapped_column(Integer, default=0)  # 0-100
+    stage: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
+    # Credits
+    credits_held: Mapped[int] = mapped_column(Integer, default=0)
+    credits_charged: Mapped[int] = mapped_column(Integer, default=0)
+
+    # Soft delete
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(

@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from core.storage import get_storage_service, ALLOWED_EXTENSIONS
+from core.storage import get_storage_service, ALLOWED_EXTENSIONS, ALLOWED_IMAGE_EXTENSIONS, ALLOWED_VIDEO_EXTENSIONS
 
 logger = logging.getLogger(__name__)
 
@@ -68,10 +68,30 @@ async def upload_file(file: UploadFile = File(...)):
             detail=f"File type '{ext}' not allowed. Allowed: {sorted(ALLOWED_EXTENSIONS)}",
         )
 
+    # Validate MIME content type matches extension
+    ALLOWED_MIME_PREFIXES = ("image/", "video/")
+    content_type = file.content_type or mimetypes.guess_type(file.filename)[0] or "application/octet-stream"
+    if not content_type.startswith(ALLOWED_MIME_PREFIXES) and content_type != "application/octet-stream":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Content type '{content_type}' not allowed. Must be image/* or video/*.",
+        )
+
+    # Cross-check: image extension should have image MIME, video ext → video MIME
+    if ext in ALLOWED_IMAGE_EXTENSIONS and content_type.startswith("video/"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Extension '{ext}' is an image type but content is '{content_type}'.",
+        )
+    if ext in ALLOWED_VIDEO_EXTENSIONS and content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Extension '{ext}' is a video type but content is '{content_type}'.",
+        )
+
     storage = get_storage_service()
 
     try:
-        content_type = file.content_type or mimetypes.guess_type(file.filename)[0] or "application/octet-stream"
         result = storage.save_upload(
             file=file.file,
             original_filename=file.filename,

@@ -1,9 +1,23 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Cpu, MemoryStick, Bell, Search, User, X, ListVideo, Boxes, LogOut, Settings, ChevronRight, Loader2 } from "lucide-react";
+import {
+  Cpu,
+  MemoryStick,
+  Bell,
+  Search,
+  User,
+  X,
+  ListVideo,
+  Boxes,
+  LogOut,
+  Settings,
+  ChevronRight,
+  Loader2,
+  Activity,
+} from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { jobsApi, modelsApi } from "@/lib/api/client";
@@ -28,12 +42,10 @@ function GlobalSearch() {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Search jobs and models
   const { data: searchResults, isLoading } = useQuery({
     queryKey: ["search", query],
     queryFn: async () => {
       if (!query.trim()) return { jobs: [], models: [] };
-
       const q = query.toLowerCase();
 
       let jobs: Job[] = [];
@@ -78,7 +90,6 @@ function GlobalSearch() {
     staleTime: 2000,
   });
 
-  // Close on click outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -89,7 +100,6 @@ function GlobalSearch() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Keyboard shortcut: Ctrl+K to focus search
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -117,7 +127,7 @@ function GlobalSearch() {
 
   return (
     <div ref={containerRef} className="relative">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-muted)" }} />
       <input
         ref={inputRef}
         type="text"
@@ -128,12 +138,18 @@ function GlobalSearch() {
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
-        className="h-8 w-72 pl-9 pr-8 rounded-md bg-secondary border-none text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        className="h-9 w-80 max-lg:w-60 pl-9 pr-8 rounded-lg text-sm transition-all duration-150"
+        style={{
+          background: "var(--background)",
+          border: "1px solid var(--border-default)",
+          color: "var(--text-primary)",
+        }}
       />
       {query && (
         <button
           onClick={() => { setQuery(""); setOpen(false); }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2"
+          style={{ color: "var(--text-muted)" }}
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -141,73 +157,96 @@ function GlobalSearch() {
 
       {/* Search Results Dropdown */}
       {open && query.trim() && (
-        <div className="absolute top-full left-0 mt-2 w-96 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden">
+        <div
+          className="absolute top-full left-0 mt-2 w-96 rounded-xl overflow-hidden z-50"
+          style={{
+            background: "var(--card)",
+            border: "1px solid var(--border-default)",
+            boxShadow: "var(--shadow-floating)",
+          }}
+        >
           {isLoading ? (
-            <div className="flex items-center justify-center py-6 gap-2 text-muted-foreground">
+            <div className="flex items-center justify-center py-6 gap-2" style={{ color: "var(--text-muted)" }}>
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">Searching...</span>
             </div>
           ) : !hasResults ? (
-            <div className="py-6 text-center text-sm text-muted-foreground">
+            <div className="py-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
               No results for &quot;{query}&quot;
             </div>
           ) : (
             <div className="max-h-80 overflow-y-auto">
-              {/* Jobs Results */}
               {searchResults!.jobs.length > 0 && (
                 <div>
-                  <div className="px-3 py-2 text-xs font-medium text-muted-foreground bg-secondary/50 flex items-center gap-1.5">
+                  <div
+                    className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5"
+                    style={{ color: "var(--text-tertiary)", background: "var(--surface-secondary)" }}
+                  >
                     <ListVideo className="w-3 h-3" />
                     Jobs
                   </div>
                   {searchResults!.jobs.map((job) => (
                     <button
                       key={job.id}
-                      onClick={() => handleSelect(`/jobs/${job.id}`)}
-                      className="w-full px-3 py-2.5 text-left hover:bg-secondary/50 transition-colors flex items-center justify-between"
+                      onClick={() => handleSelect(`/admin/jobs/${job.id}`)}
+                      className="w-full px-3 py-2.5 text-left transition-colors flex items-center justify-between"
+                      style={{ color: "var(--text-primary)" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-hover)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono text-primary">#{job.id.slice(0, 8)}</span>
-                          <span className={cn(
-                            "text-[10px] px-1.5 py-0.5 rounded border",
-                            job.status === "completed" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
-                            job.status === "failed" ? "bg-red-500/10 text-red-400 border-red-500/20" :
-                            "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
-                          )}>
+                          <span className="text-xs font-mono" style={{ color: "var(--primary)" }}>
+                            #{job.id.slice(0, 8)}
+                          </span>
+                          <span
+                            className="text-[10px] px-1.5 py-0.5 rounded-md font-medium"
+                            style={
+                              job.status === "completed"
+                                ? { background: "var(--success-soft)", color: "var(--success)" }
+                                : job.status === "failed"
+                                ? { background: "var(--danger-soft)", color: "var(--danger)" }
+                                : { background: "var(--warning-soft)", color: "var(--warning)" }
+                            }
+                          >
                             {job.status}
                           </span>
                         </div>
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">
+                        <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text-tertiary)" }}>
                           {job.inputs.prompt?.slice(0, 60) || "No prompt"}
                         </p>
                       </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      <ChevronRight className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--text-muted)" }} />
                     </button>
                   ))}
                 </div>
               )}
 
-              {/* Models Results */}
               {searchResults!.models.length > 0 && (
                 <div>
-                  <div className="px-3 py-2 text-xs font-medium text-muted-foreground bg-secondary/50 flex items-center gap-1.5">
+                  <div
+                    className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5"
+                    style={{ color: "var(--text-tertiary)", background: "var(--surface-secondary)" }}
+                  >
                     <Boxes className="w-3 h-3" />
                     Models
                   </div>
                   {searchResults!.models.map((model) => (
                     <button
                       key={model.id}
-                      onClick={() => handleSelect(`/models/${model.id}`)}
-                      className="w-full px-3 py-2.5 text-left hover:bg-secondary/50 transition-colors flex items-center justify-between"
+                      onClick={() => handleSelect(`/admin/models/${model.id}`)}
+                      className="w-full px-3 py-2.5 text-left transition-colors flex items-center justify-between"
+                      style={{ color: "var(--text-primary)" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-hover)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                     >
                       <div className="min-w-0">
-                        <span className="text-sm text-foreground">{model.name}</span>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {model.capabilities.map(c => c === "text_to_video" ? "T2V" : "I2V").join(", ")} &bull; {model.recommended_vram_gb} GB VRAM
+                        <span className="text-sm">{model.name}</span>
+                        <p className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>
+                          {model.capabilities.map((c) => c === "text_to_video" ? "T2V" : "I2V").join(", ")} &bull; {model.recommended_vram_gb} GB VRAM
                         </p>
                       </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      <ChevronRight className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--text-muted)" }} />
                     </button>
                   ))}
                 </div>
@@ -225,7 +264,6 @@ function NotificationsDropdown() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch recent jobs for notifications (completed/failed in last hour)
   const { data: recentJobs } = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => {
@@ -246,9 +284,10 @@ function NotificationsDropdown() {
   });
 
   const notifications = recentJobs || [];
-  const unreadCount = notifications.filter((j) => j.status === "completed" || j.status === "failed").length;
+  const unreadCount = notifications.filter(
+    (j) => j.status === "completed" || j.status === "failed"
+  ).length;
 
-  // Close on click outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -263,48 +302,77 @@ function NotificationsDropdown() {
     <div ref={containerRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+        className="relative p-2 rounded-lg transition-colors duration-150"
+        style={{ color: "var(--text-tertiary)" }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-hover)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+        aria-label="Notifications"
       >
-        <Bell className="w-4 h-4" />
+        <Bell className="w-[18px] h-[18px]" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-medium rounded-full flex items-center justify-center">
+          <span
+            className="absolute -top-0.5 -right-0.5 w-4 h-4 text-white text-[10px] font-semibold rounded-full flex items-center justify-center"
+            style={{ background: "var(--primary)" }}
+          >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <h3 className="text-sm font-medium text-foreground">Notifications</h3>
-            <span className="text-xs text-muted-foreground">{notifications.length} recent</span>
+        <div
+          className="absolute right-0 top-full mt-2 w-80 rounded-xl overflow-hidden z-50"
+          style={{
+            background: "var(--card)",
+            border: "1px solid var(--border-default)",
+            boxShadow: "var(--shadow-floating)",
+          }}
+        >
+          <div
+            className="flex items-center justify-between px-4 py-3"
+            style={{ borderBottom: "1px solid var(--border-default)" }}
+          >
+            <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+              Notifications
+            </h3>
+            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+              {notifications.length} recent
+            </span>
           </div>
           <div className="max-h-72 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">
+              <div className="py-8 text-center text-sm" style={{ color: "var(--text-muted)" }}>
                 No notifications yet
               </div>
             ) : (
               notifications.map((job) => (
                 <Link
                   key={job.id}
-                  href={`/jobs/${job.id}`}
+                  href={`/admin/jobs/${job.id}`}
                   onClick={() => setOpen(false)}
-                  className="flex items-start gap-3 px-4 py-3 hover:bg-secondary/50 transition-colors border-b border-border last:border-0"
+                  className="flex items-start gap-3 px-4 py-3 transition-colors"
+                  style={{ borderBottom: "1px solid var(--border-subtle)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-hover)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                 >
-                  <div className={cn(
-                    "w-2 h-2 rounded-full mt-1.5 shrink-0",
-                    job.status === "completed" ? "bg-emerald-400" : "bg-red-400"
-                  )} />
+                  <div
+                    className="w-2 h-2 rounded-full mt-1.5 shrink-0"
+                    style={{
+                      background: job.status === "completed" ? "var(--success)" : "var(--danger)",
+                    }}
+                  />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-foreground">
-                      Job <span className="font-mono text-primary">#{job.id.slice(0, 8)}</span>{" "}
-                      {job.status === "completed" ? "completed successfully" : "failed"}
+                    <p className="text-xs" style={{ color: "var(--text-primary)" }}>
+                      Job{" "}
+                      <span className="font-mono font-medium" style={{ color: "var(--primary)" }}>
+                        #{job.id.slice(0, 8)}
+                      </span>{" "}
+                      {job.status === "completed" ? "completed" : "failed"}
                     </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                    <p className="text-[11px] mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>
                       {job.inputs.prompt?.slice(0, 50) || job.task_type.replace("_", " ")}
                     </p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                    <p className="text-[10px] mt-0.5" style={{ color: "var(--text-muted)" }}>
                       {formatTimeAgo(job.updated_at)}
                     </p>
                   </div>
@@ -313,9 +381,15 @@ function NotificationsDropdown() {
             )}
           </div>
           <Link
-            href="/jobs"
+            href="/admin/jobs"
             onClick={() => setOpen(false)}
-            className="block px-4 py-2.5 text-xs text-center text-primary hover:bg-secondary/50 border-t border-border transition-colors"
+            className="block px-4 py-2.5 text-xs text-center font-medium transition-colors"
+            style={{
+              color: "var(--primary)",
+              borderTop: "1px solid var(--border-default)",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-hover)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
           >
             View all jobs
           </Link>
@@ -331,7 +405,6 @@ function UserMenu() {
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Close on click outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -346,42 +419,62 @@ function UserMenu() {
     <div ref={containerRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-150"
+        style={{
+          background: "var(--surface-tertiary)",
+          color: "var(--text-secondary)",
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-soft)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-tertiary)"; }}
+        aria-label="User menu"
       >
         <User className="w-4 h-4" />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden">
-          {/* User Info */}
-          <div className="px-4 py-3 border-b border-border">
-            <p className="text-sm font-medium text-foreground">Admin</p>
-            <p className="text-xs text-muted-foreground">Local Administrator</p>
+        <div
+          className="absolute right-0 top-full mt-2 w-56 rounded-xl overflow-hidden z-50"
+          style={{
+            background: "var(--card)",
+            border: "1px solid var(--border-default)",
+            boxShadow: "var(--shadow-floating)",
+          }}
+        >
+          <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--border-default)" }}>
+            <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Admin</p>
+            <p className="text-xs" style={{ color: "var(--text-muted)" }}>Local Administrator</p>
           </div>
 
-          {/* Menu Items */}
           <div className="py-1">
             <button
-              onClick={() => { setOpen(false); router.push("/settings"); }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-secondary/50 transition-colors"
+              onClick={() => { setOpen(false); router.push("/admin/settings"); }}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors"
+              style={{ color: "var(--text-primary)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-hover)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
             >
-              <Settings className="w-4 h-4 text-muted-foreground" />
+              <Settings className="w-4 h-4" style={{ color: "var(--text-tertiary)" }} />
               Settings
             </button>
             <button
               onClick={() => { setOpen(false); window.open("/docs", "_blank"); }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-secondary/50 transition-colors"
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors"
+              style={{ color: "var(--text-primary)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-hover)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
             >
-              <ListVideo className="w-4 h-4 text-muted-foreground" />
+              <ListVideo className="w-4 h-4" style={{ color: "var(--text-tertiary)" }} />
               API Documentation
             </button>
           </div>
 
-          {/* Logout */}
-          <div className="border-t border-border py-1">
+          <div className="py-1" style={{ borderTop: "1px solid var(--border-default)" }}>
             <button
-              onClick={() => { setOpen(false); /* No auth yet - placeholder */ }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-secondary/50 transition-colors"
+              onClick={() => { setOpen(false); }}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors"
+              style={{ color: "var(--danger)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--danger-soft)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
             >
               <LogOut className="w-4 h-4" />
               Sign Out
@@ -409,7 +502,6 @@ function formatTimeAgo(dateStr: string): string {
 
 // --- Main Header ---
 export function Header() {
-  // Mock system status - will be replaced with real data
   const status: SystemStatus = {
     healthy: true,
     gpuUtil: 45,
@@ -418,52 +510,49 @@ export function Header() {
   };
 
   return (
-    <header className="flex items-center justify-between h-14 px-6 border-b border-border bg-card">
+    <header
+      className="flex items-center justify-between h-16 px-6 max-md:px-4 sticky top-0 z-30"
+      style={{
+        background: "var(--header-background)",
+        borderBottom: "1px solid var(--header-border)",
+      }}
+    >
       {/* Left - Search */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center">
         <GlobalSearch />
       </div>
 
-      {/* Right - System Status + Actions */}
-      <div className="flex items-center gap-4">
-        {/* System Status Indicators */}
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <span className="text-muted-foreground">System:</span>
-            <span
-              className={cn(
-                "flex items-center gap-1",
-                status.healthy ? "text-emerald-400" : "text-red-400"
-              )}
-            >
-              <span
-                className={cn(
-                  "w-2 h-2 rounded-full",
-                  status.healthy ? "bg-emerald-400" : "bg-red-400"
-                )}
-              />
-              {status.healthy ? "Healthy" : "Unhealthy"}
-            </span>
-          </div>
-
-          <span className="text-border">|</span>
-
-          <div className="flex items-center gap-1.5">
-            <Cpu className="w-3.5 h-3.5" />
-            <span>GPU:</span>
-            <span className="text-foreground">{status.gpuUtil}%</span>
-          </div>
-
-          <span className="text-border">|</span>
-
-          <div className="flex items-center gap-1.5">
-            <MemoryStick className="w-3.5 h-3.5" />
-            <span>VRAM:</span>
-            <span className="text-foreground">
-              {status.vramUsed} / {status.vramTotal} GB
-            </span>
-          </div>
+      {/* Right - Status + Actions */}
+      <div className="flex items-center gap-3">
+        {/* System Status Chip */}
+        <div
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium max-md:hidden"
+          style={{
+            background: status.healthy ? "var(--success-soft)" : "var(--danger-soft)",
+            color: status.healthy ? "var(--success)" : "var(--danger)",
+          }}
+        >
+          <Activity className="w-3.5 h-3.5" />
+          <span>{status.healthy ? "System Healthy" : "System Unhealthy"}</span>
         </div>
+
+        {/* GPU Chip */}
+        <div
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium max-lg:hidden"
+          style={{
+            background: "var(--primary-soft)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          <Cpu className="w-3.5 h-3.5" style={{ color: "var(--primary)" }} />
+          <span>GPU {status.gpuUtil}%</span>
+          <span style={{ color: "var(--border-strong)" }}>|</span>
+          <MemoryStick className="w-3.5 h-3.5" style={{ color: "var(--primary)" }} />
+          <span>{status.vramUsed}/{status.vramTotal} GB</span>
+        </div>
+
+        {/* Divider */}
+        <div className="w-px h-6 max-md:hidden" style={{ background: "var(--border-default)" }} />
 
         {/* Action buttons */}
         <div className="flex items-center gap-1">

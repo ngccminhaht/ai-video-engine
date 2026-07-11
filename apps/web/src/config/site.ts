@@ -8,6 +8,8 @@ import {
   Settings,
   FileText,
   HelpCircle,
+  Users,
+  ScrollText,
   type LucideIcon,
 } from "lucide-react";
 
@@ -18,15 +20,40 @@ export interface NavItem {
   badge?: string;
 }
 
-export const mainNavItems: NavItem[] = [
-  { title: "Dashboard", href: "/", icon: LayoutDashboard },
-  { title: "Generate Video", href: "/generate", icon: Video },
-  { title: "Jobs", href: "/jobs", icon: ListVideo },
-  { title: "Models", href: "/models", icon: Boxes },
-  { title: "Workers", href: "/workers", icon: Cpu },
-  { title: "Storage", href: "/storage", icon: HardDrive },
-  { title: "Settings", href: "/settings", icon: Settings },
+export interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+export const navGroups: NavGroup[] = [
+  {
+    label: "Operations",
+    items: [
+      { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
+      { title: "Generate Video", href: "/admin/generate", icon: Video },
+      { title: "Jobs", href: "/admin/jobs", icon: ListVideo },
+    ],
+  },
+  {
+    label: "AI Infrastructure",
+    items: [
+      { title: "Models", href: "/admin/models", icon: Boxes },
+      { title: "Workers", href: "/admin/workers", icon: Cpu },
+      { title: "Storage", href: "/admin/storage", icon: HardDrive },
+    ],
+  },
+  {
+    label: "Management",
+    items: [
+      { title: "Users", href: "/admin/users", icon: Users },
+      { title: "Audit Logs", href: "/admin/logs", icon: ScrollText },
+      { title: "Settings", href: "/admin/settings", icon: Settings },
+    ],
+  },
 ];
+
+// Flat list for backward compatibility
+export const mainNavItems: NavItem[] = navGroups.flatMap((g) => g.items);
 
 export const bottomNavItems: NavItem[] = [
   { title: "Documentation", href: "/docs", icon: FileText },

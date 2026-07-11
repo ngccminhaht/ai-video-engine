@@ -33,6 +33,21 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json();
 }
 
+// --- Auth header helper ---
+
+function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+  }
+  return headers;
+}
+
 // --- Generic fetch helpers ---
 
 async function get<T>(path: string, params?: Record<string, string | number | undefined>): Promise<T> {
@@ -44,14 +59,16 @@ async function get<T>(path: string, params?: Record<string, string | number | un
       }
     });
   }
-  const response = await fetch(url.toString());
+  const response = await fetch(url.toString(), {
+    headers: getAuthHeaders(),
+  });
   return handleResponse<T>(response);
 }
 
 async function post<T>(path: string, body?: unknown): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: body ? JSON.stringify(body) : undefined,
   });
   return handleResponse<T>(response);
@@ -60,7 +77,7 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
 async function patch<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(body),
   });
   return handleResponse<T>(response);
@@ -69,6 +86,7 @@ async function patch<T>(path: string, body: unknown): Promise<T> {
 async function del<T>(path: string): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     method: "DELETE",
+    headers: getAuthHeaders(),
   });
   return handleResponse<T>(response);
 }
@@ -131,8 +149,16 @@ export const storageApi = {
   upload: async (file: File): Promise<{ path: string; filename: string; size_mb: number }> => {
     const formData = new FormData();
     formData.append("file", file);
+    const headers: Record<string, string> = {};
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+    }
     const response = await fetch(`${API_BASE}/upload`, {
       method: "POST",
+      headers,
       body: formData,
     });
     return handleResponse(response);

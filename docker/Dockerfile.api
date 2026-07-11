@@ -1,33 +1,22 @@
-# Backend API + Worker
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg \
-    curl \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy project files
+# Install Python deps
 COPY pyproject.toml ./
-COPY apps/ ./apps/
-COPY core/ ./core/
-COPY model_adapters/ ./model_adapters/
-COPY pipelines/ ./pipelines/
-COPY postprocessing/ ./postprocessing/
-COPY alembic/ ./alembic/
-COPY alembic.ini ./
-COPY scripts/ ./scripts/
+RUN pip install --no-cache-dir -e "." 2>/dev/null || pip install --no-cache-dir .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -e .
+# Copy source
+COPY . .
 
-# Create storage directories
-RUN mkdir -p data uploads outputs logs models
+# Create directories
+RUN mkdir -p uploads outputs data logs
 
-# Expose API port
+# Run migrations and start server
 EXPOSE 8000
-
-# Default: run API server
-CMD ["python", "-m", "uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn apps.api.main:app --host 0.0.0.0 --port 8000"]

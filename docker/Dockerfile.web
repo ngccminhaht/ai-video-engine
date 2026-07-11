@@ -1,44 +1,34 @@
-# Frontend (Next.js)
-FROM node:20-alpine AS base
+FROM node:20-alpine AS builder
 
-# --- Dependencies ---
-FROM base AS deps
 WORKDIR /app
+
+# Install deps
 COPY apps/web/package.json apps/web/package-lock.json ./
 RUN npm ci
 
-# --- Build ---
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY apps/web/ ./
+# Copy source and build
+COPY apps/web/ .
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Build args for env vars at build time
-ARG NEXT_PUBLIC_API_URL=http://localhost:8000
-ARG NEXT_PUBLIC_USE_MOCK_API=false
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_USE_MOCK_API=$NEXT_PUBLIC_USE_MOCK_API
+# Set API URL for build-time rewrites (Docker internal network)
+ENV INTERNAL_API_URL=http://api:8000
+ENV NEXT_PUBLIC_API_URL=http://localhost:8000
 
 RUN npm run build
 
-# --- Production ---
-FROM base AS runner
+# Production runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
-
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
-EXPOSE 3000
-
+ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+# Copy standalone output
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+EXPOSE 3000
 CMD ["node", "server.js"]

@@ -49,6 +49,13 @@ class AIModel(Base):
     avg_vram_usage_gb: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     total_jobs_completed: Mapped[int] = mapped_column(Integer, default=0)
 
+    # End-user facing
+    is_public: Mapped[bool] = mapped_column(Boolean, default=True)
+    display_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    style_preset: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    estimated_time_seconds: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    credit_cost_per_second: Mapped[int] = mapped_column(Integer, default=2)
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

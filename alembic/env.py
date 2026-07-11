@@ -15,6 +15,11 @@ from core.database import Base
 # Import all models so Alembic can detect them
 from core.model_registry.models import AIModel  # noqa: F401
 from core.job_queue.models import Job  # noqa: F401
+from core.auth.models import User, RefreshToken  # noqa: F401
+from core.projects.models import Project, GenerationOutput  # noqa: F401
+from core.assets.models import Asset  # noqa: F401
+from core.audit.models import AuditLog  # noqa: F401
+from core.billing.models import UsageRecord, CreditTransaction, Subscription  # noqa: F401
 
 config = context.config
 

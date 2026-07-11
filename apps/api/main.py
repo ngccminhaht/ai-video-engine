@@ -6,7 +6,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from apps.api.config import get_settings
-from apps.api.routers import health, jobs, models, storage, workers
+from apps.api.routers import assets, auth, generation_events, generations, health, jobs, models, options, outputs, projects, storage, usage, users, workers
+from apps.api.routers.admin import router as admin_router
 
 
 @asynccontextmanager
@@ -51,21 +52,50 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # Security middleware (applied in reverse order — first added = outermost)
+    from apps.api.middleware.security import (
+        RateLimitMiddleware,
+        RequestIdMiddleware,
+        SecurityHeadersMiddleware,
+    )
+
+    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(RequestIdMiddleware)
+    app.add_middleware(RateLimitMiddleware)
+
     # CORS middleware
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Restrict in production
+        allow_origins=settings.cors_origins.split(",") if hasattr(settings, "cors_origins") and settings.cors_origins else ["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
-    # Register routers
+    # --- Auth ---
+    app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
+
+    # --- User-facing (end-user) ---
+    app.include_router(users.router, prefix="/api/v1", tags=["User"])
+    app.include_router(generations.router, prefix="/api/v1/generations", tags=["Generations"])
+    app.include_router(generation_events.router, prefix="/api/v1", tags=["Generation Events"])
+    app.include_router(options.router, prefix="/api/v1", tags=["Generation Options"])
+    app.include_router(projects.router, prefix="/api/v1/projects", tags=["Projects"])
+    app.include_router(outputs.router, prefix="/api/v1", tags=["Outputs"])
+    app.include_router(assets.router, prefix="/api/v1/assets", tags=["Assets"])
+    app.include_router(usage.router, prefix="/api/v1", tags=["Usage"])
+
+    # --- Public/Shared ---
     app.include_router(health.router, tags=["Health"])
+
+    # --- Existing endpoints (will be gated by auth in future phases) ---
     app.include_router(models.router, prefix="/api/v1/models", tags=["Models"])
     app.include_router(jobs.router, prefix="/api/v1/jobs", tags=["Jobs"])
     app.include_router(storage.router, prefix="/api/v1", tags=["Storage"])
     app.include_router(workers.router, prefix="/api/v1", tags=["Workers & Stats"])
+
+    # --- Admin ---
+    app.include_router(admin_router, prefix="/api/v1/admin", tags=["Admin"])
 
     return app
 
