@@ -35,11 +35,15 @@ dev = [
     "ruff==0.8.6",
 ]
 gpu = [
-    # Sẽ thêm khi tích hợp model thật
-    # "torch>=2.1.0",
-    # "diffusers>=0.30.0",
-    # "transformers>=4.40.0",
-    # "accelerate>=0.30.0",
+    "torch>=2.1.0",
+    "torchvision>=0.16.0",
+    "diffusers>=0.30.0",
+    "transformers>=4.40.0",
+    "accelerate>=0.30.0",
+    "imageio[ffmpeg]>=2.34.0",
+    "Pillow>=10.0.0",
+    # Optional: quantization (reduces VRAM significantly)
+    # "bitsandbytes>=0.43.0",  # Linux only for now
 ]
 
 [tool.ruff]

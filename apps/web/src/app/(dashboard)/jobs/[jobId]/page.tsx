@@ -1,7 +1,8 @@
 "use client";
 
 import { use } from "react";
-import { mockJobs } from "@/mocks/jobs";
+import { useJob, useCancelJob } from "@/features/jobs/hooks/use-jobs";
+import { getFileUrl } from "@/lib/api/client";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -9,12 +10,10 @@ import {
   ArrowLeft,
   RotateCcw,
   Download,
-  Trash2,
+  XCircle,
   Clock,
-  Cpu,
-  MemoryStick,
-  Timer,
   Play,
+  Loader2,
 } from "lucide-react";
 
 const timelineSteps = [
@@ -44,9 +43,19 @@ export default function JobDetailPage({
   params: Promise<{ jobId: string }>;
 }) {
   const { jobId } = use(params);
-  const job = mockJobs.find((j) => j.id === jobId);
+  const { data: job, isLoading, error } = useJob(jobId);
+  const cancelJob = useCancelJob();
 
-  if (!job) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-sm text-muted-foreground">Loading job...</span>
+      </div>
+    );
+  }
+
+  if (error || !job) {
     return (
       <div className="flex flex-col items-center justify-center h-96 space-y-4">
         <p className="text-lg text-muted-foreground">Job not found</p>
@@ -59,6 +68,9 @@ export default function JobDetailPage({
 
   const isFailed = job.status === "failed";
   const isCompleted = job.status === "completed";
+  const isCancellable = ["pending", "queued"].includes(job.status);
+  const videoUrl = getFileUrl(job.output_path);
+  const thumbnailUrl = getFileUrl(job.thumbnail_path);
 
   return (
     <div className="space-y-6">
@@ -79,25 +91,31 @@ export default function JobDetailPage({
               <StatusBadge status={job.status} />
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {job.task_type.replace("_", " ")} &bull; {job.model_id || "Unknown model"}
+              {job.task_type.replace("_", " ")} &bull; {job.model_id || "auto"}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary text-sm text-foreground hover:bg-secondary/80 transition-colors">
-            <RotateCcw className="w-4 h-4" />
-            Retry
-          </button>
-          {isCompleted && (
-            <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-sm text-primary-foreground hover:bg-primary/90 transition-colors">
-              <Download className="w-4 h-4" />
-              Download
+          {isCancellable && (
+            <button
+              onClick={() => cancelJob.mutate(job.id)}
+              disabled={cancelJob.isPending}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary text-sm text-foreground hover:bg-secondary/80 transition-colors"
+            >
+              <XCircle className="w-4 h-4" />
+              Cancel
             </button>
           )}
-          <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-destructive text-sm text-destructive-foreground hover:bg-destructive/90 transition-colors">
-            <Trash2 className="w-4 h-4" />
-            Delete
-          </button>
+          {isCompleted && videoUrl && (
+            <a
+              href={videoUrl}
+              download
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-sm text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Download
+            </a>
+          )}
         </div>
       </div>
 
@@ -107,35 +125,27 @@ export default function JobDetailPage({
           {/* Output Video / Preview */}
           <div className="bg-card border border-border rounded-xl p-5">
             <h3 className="text-sm font-medium text-foreground mb-3">Output Video</h3>
-            {isCompleted ? (
+            {isCompleted && videoUrl ? (
               <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm cursor-pointer hover:bg-white/30 transition-colors">
-                    <Play className="w-6 h-6 text-white ml-1" />
-                  </div>
-                </div>
-                {/* Placeholder for video thumbnail */}
-                <div className="w-full h-full bg-gradient-to-br from-blue-900/50 to-purple-900/50" />
-                {/* Time indicator */}
-                <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2">
-                  <span className="text-xs text-white/80">0:00 / {job.generation_params.duration}:00</span>
-                  <div className="flex-1 h-1 bg-white/20 rounded-full">
-                    <div className="h-full w-0 bg-primary rounded-full" />
-                  </div>
-                </div>
+                <video
+                  src={videoUrl}
+                  poster={thumbnailUrl || undefined}
+                  controls
+                  className="w-full h-full object-contain"
+                />
               </div>
             ) : isFailed ? (
               <div className="aspect-video bg-red-500/5 border border-red-500/20 rounded-lg flex items-center justify-center">
-                <div className="text-center">
+                <div className="text-center px-6">
                   <p className="text-sm text-red-400 font-medium">Generation Failed</p>
-                  <p className="text-xs text-red-400/70 mt-1">{job.error_message}</p>
+                  <p className="text-xs text-red-400/70 mt-1 break-words">{job.error_message}</p>
                 </div>
               </div>
             ) : (
               <div className="aspect-video bg-secondary rounded-lg flex items-center justify-center">
                 <div className="text-center">
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Processing...</p>
+                  <p className="text-sm text-muted-foreground capitalize">{job.status.replace("_", " ")}...</p>
                 </div>
               </div>
             )}
@@ -161,74 +171,74 @@ export default function JobDetailPage({
                   </p>
                 </div>
               )}
+              {job.inputs.image_path && (
+                <div>
+                  <span className="text-xs text-muted-foreground block mb-1">Input Image</span>
+                  <p className="text-sm text-foreground bg-secondary rounded-lg p-3 font-mono">
+                    {job.inputs.image_path}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
+
+          {/* Performance Metrics */}
+          {(job.total_time_seconds || job.inference_time_seconds) && (
+            <div className="bg-card border border-border rounded-xl p-5">
+              <h3 className="text-sm font-medium text-foreground mb-3">Performance</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {job.queue_time_seconds != null && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Queue Time</p>
+                    <p className="text-lg font-semibold text-foreground">{job.queue_time_seconds.toFixed(1)}s</p>
+                  </div>
+                )}
+                {job.load_model_time_seconds != null && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Load Model</p>
+                    <p className="text-lg font-semibold text-foreground">{job.load_model_time_seconds.toFixed(1)}s</p>
+                  </div>
+                )}
+                {job.inference_time_seconds != null && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Inference</p>
+                    <p className="text-lg font-semibold text-foreground">{job.inference_time_seconds.toFixed(1)}s</p>
+                  </div>
+                )}
+                {job.total_time_seconds != null && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Total Time</p>
+                    <p className="text-lg font-semibold text-primary">{job.total_time_seconds.toFixed(1)}s</p>
+                  </div>
+                )}
+                {job.peak_vram_gb != null && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Peak VRAM</p>
+                    <p className="text-lg font-semibold text-foreground">{job.peak_vram_gb} GB</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right: Info + Timeline */}
         <div className="space-y-4">
-          {/* Job Information */}
-          <div className="bg-card border border-border rounded-xl p-5">
-            <h3 className="text-sm font-medium text-foreground mb-3">Job Information</h3>
-            <div className="space-y-2.5 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Task Type</span>
-                <span className="text-foreground capitalize">{job.task_type.replace("_", " ")}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Model</span>
-                <span className="text-foreground">{job.model_id}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Resolution</span>
-                <span className="text-foreground">{job.generation_params.resolution}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">FPS</span>
-                <span className="text-foreground">{job.generation_params.fps}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Created</span>
-                <span className="text-foreground">
-                  {new Date(job.created_at).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              </div>
-              {job.started_at && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Started At</span>
-                  <span className="text-foreground">
-                    {new Date(job.started_at).toLocaleTimeString()}
-                  </span>
-                </div>
-              )}
-              {job.completed_at && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Completed At</span>
-                  <span className="text-foreground">
-                    {new Date(job.completed_at).toLocaleTimeString()}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* Generation Settings */}
           <div className="bg-card border border-border rounded-xl p-5">
             <h3 className="text-sm font-medium text-foreground mb-3">Generation Settings</h3>
             <div className="space-y-2.5 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Model</span>
-                <span className="text-foreground">{job.model_id}</span>
+                <span className="text-foreground">{job.model_id || "auto"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Resolution</span>
                 <span className="text-foreground">{job.generation_params.resolution}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Duration</span>
+                <span className="text-foreground">{job.generation_params.duration}s</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">FPS</span>
@@ -298,6 +308,31 @@ export default function JobDetailPage({
               })}
             </div>
           </div>
+
+          {/* Output Metadata */}
+          {job.output_metadata && (
+            <div className="bg-card border border-border rounded-xl p-5">
+              <h3 className="text-sm font-medium text-foreground mb-3">Output Info</h3>
+              <div className="space-y-2.5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Resolution</span>
+                  <span className="text-foreground">{job.output_metadata.width}x{job.output_metadata.height}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Duration</span>
+                  <span className="text-foreground">{job.output_metadata.duration}s</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">FPS</span>
+                  <span className="text-foreground">{job.output_metadata.fps}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">File Size</span>
+                  <span className="text-foreground">{job.output_metadata.file_size_mb} MB</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

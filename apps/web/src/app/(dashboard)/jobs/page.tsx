@@ -1,28 +1,37 @@
 "use client";
 
 import { useState } from "react";
-import { mockJobs } from "@/mocks/jobs";
+import { useJobs } from "@/features/jobs/hooks/use-jobs";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { Search, Filter, Download, MoreHorizontal } from "lucide-react";
-import type { JobStatus, TaskType } from "@/types";
+import { Search, Download, MoreHorizontal, Loader2 } from "lucide-react";
 
 export default function JobsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(0);
+  const limit = 20;
 
-  const filteredJobs = mockJobs.filter((job) => {
-    if (statusFilter !== "all" && job.status !== statusFilter) return false;
-    if (typeFilter !== "all" && job.task_type !== typeFilter) return false;
-    if (
-      searchQuery &&
-      !job.id.includes(searchQuery) &&
-      !job.inputs.prompt?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-      return false;
-    return true;
+  const { data, isLoading, error } = useJobs({
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    task_type: typeFilter !== "all" ? typeFilter : undefined,
+    skip: page * limit,
+    limit,
+  });
+
+  const jobs = data?.jobs || [];
+  const totalJobs = data?.total || 0;
+  const totalPages = Math.ceil(totalJobs / limit);
+
+  // Client-side search filter (on top of server filters)
+  const filteredJobs = jobs.filter((job) => {
+    if (!searchQuery) return true;
+    return (
+      job.id.includes(searchQuery) ||
+      job.inputs.prompt?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
   });
 
   return (
@@ -44,7 +53,7 @@ export default function JobsPage() {
             (status) => (
               <button
                 key={status}
-                onClick={() => setStatusFilter(status)}
+                onClick={() => { setStatusFilter(status); setPage(0); }}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-xs font-medium transition-colors capitalize",
                   statusFilter === status
@@ -60,19 +69,12 @@ export default function JobsPage() {
 
         <select
           value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
+          onChange={(e) => { setTypeFilter(e.target.value); setPage(0); }}
           className="h-8 px-3 bg-secondary border border-border rounded-md text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
         >
           <option value="all">All Task Types</option>
           <option value="text_to_video">Text to Video</option>
           <option value="image_to_video">Image to Video</option>
-        </select>
-
-        <select className="h-8 px-3 bg-secondary border border-border rounded-md text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring">
-          <option>All Models</option>
-          <option>realisticVL_v4.0</option>
-          <option>cogVideoX_5B</option>
-          <option>animateDiff_v3</option>
         </select>
 
         <div className="relative ml-auto">
@@ -87,124 +89,123 @@ export default function JobsPage() {
         </div>
       </div>
 
-      {/* Jobs Table */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-secondary/50">
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                  Job ID
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                  Type
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                  Model
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                  Progress
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                  Duration
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                  Created
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredJobs.map((job) => (
-                <tr
-                  key={job.id}
-                  className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors"
-                >
-                  <td className="py-3 px-4">
-                    <Link
-                      href={`/jobs/${job.id}`}
-                      className="text-primary hover:underline font-mono text-xs"
-                    >
-                      #{job.id.slice(0, 8)}
-                    </Link>
-                  </td>
-                  <td className="py-3 px-4 text-xs text-muted-foreground capitalize">
-                    {job.task_type.replace("_to_", " → ")}
-                  </td>
-                  <td className="py-3 px-4 text-xs text-foreground">
-                    {job.model_id || "—"}
-                  </td>
-                  <td className="py-3 px-4">
-                    <StatusBadge status={job.status} />
-                  </td>
-                  <td className="py-3 px-4 text-xs text-muted-foreground">
-                    {job.status === "completed"
-                      ? "100%"
-                      : job.status === "processing"
-                      ? "65%"
-                      : job.status === "loading_model"
-                      ? "20%"
-                      : "—"}
-                  </td>
-                  <td className="py-3 px-4 text-xs text-muted-foreground">
-                    {job.total_time_seconds
-                      ? `${job.total_time_seconds.toFixed(1)}s`
-                      : "—"}
-                  </td>
-                  <td className="py-3 px-4 text-xs text-muted-foreground">
-                    {new Date(job.created_at).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-1">
-                      {job.status === "completed" && (
-                        <button className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
-                          <Download className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                      <button className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
-                        <MoreHorizontal className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Loading */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-sm text-muted-foreground">Loading jobs...</span>
         </div>
+      )}
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-          <span className="text-xs text-muted-foreground">
-            Showing 1 to {filteredJobs.length} of {mockJobs.length} results
-          </span>
-          <div className="flex items-center gap-1">
-            {[1, 2, 3].map((page) => (
-              <button
-                key={page}
-                className={cn(
-                  "w-8 h-8 rounded-md text-xs font-medium transition-colors",
-                  page === 1
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+      {/* Error */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-sm text-red-400">
+          Failed to load jobs: {(error as Error).message}
+        </div>
+      )}
+
+      {/* Jobs Table */}
+      {!isLoading && !error && (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-secondary/50">
+                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">Job ID</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">Type</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">Model</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">Status</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">Duration</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">Created</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredJobs.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
+                      No jobs found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredJobs.map((job) => (
+                    <tr
+                      key={job.id}
+                      className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors"
+                    >
+                      <td className="py-3 px-4">
+                        <Link
+                          href={`/jobs/${job.id}`}
+                          className="text-primary hover:underline font-mono text-xs"
+                        >
+                          #{job.id.slice(0, 8)}
+                        </Link>
+                      </td>
+                      <td className="py-3 px-4 text-xs text-muted-foreground capitalize">
+                        {job.task_type.replace("_to_", " → ")}
+                      </td>
+                      <td className="py-3 px-4 text-xs text-foreground">
+                        {job.model_id || "auto"}
+                      </td>
+                      <td className="py-3 px-4">
+                        <StatusBadge status={job.status} />
+                      </td>
+                      <td className="py-3 px-4 text-xs text-muted-foreground">
+                        {job.total_time_seconds
+                          ? `${job.total_time_seconds.toFixed(1)}s`
+                          : "—"}
+                      </td>
+                      <td className="py-3 px-4 text-xs text-muted-foreground">
+                        {new Date(job.created_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-1">
+                          {job.status === "completed" && (
+                            <button className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                              <Download className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          <button className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                            <MoreHorizontal className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 )}
-              >
-                {page}
-              </button>
-            ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+            <span className="text-xs text-muted-foreground">
+              Showing {page * limit + 1} to {Math.min((page + 1) * limit, totalJobs)} of {totalJobs} results
+            </span>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setPage(i)}
+                  className={cn(
+                    "w-8 h-8 rounded-md text-xs font-medium transition-colors",
+                    page === i
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  )}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

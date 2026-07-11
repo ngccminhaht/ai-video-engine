@@ -1,130 +1,286 @@
 """
 arq Worker for processing video generation jobs.
 
+Full pipeline:
+    API creates job → Redis queue → Worker picks up → Adapter generates video → DB updated
+
 Run with:
     arq apps.worker.WorkerSettings
 """
 
 import logging
+import time
 from datetime import datetime, timezone
-
-from sqlalchemy import select
 
 from apps.api.config import get_settings
 from core.database import async_session_factory
 from core.job_queue import get_redis_settings
 from core.job_queue.models import Job
+from core.model_registry.models import AIModel
+from model_adapters import get_adapter_instance, list_loaded_instances
+from model_adapters.base import (
+    AdapterStatus,
+    GenerationRequest,
+    GenerationResult,
+    TaskType,
+)
 
 logger = logging.getLogger(__name__)
+
+settings = get_settings()
+
+# Default adapter for models without an explicit adapter_name
+DEFAULT_ADAPTER = "mock"
+
+
+def _resolve_resolution(resolution: str) -> tuple[int, int]:
+    """Convert resolution string to (width, height) tuple."""
+    presets = {
+        "480p": (854, 480),
+        "720p": (1280, 720),
+        "1080p": (1920, 1080),
+    }
+    if resolution in presets:
+        return presets[resolution]
+
+    # Try WxH format
+    if "x" in resolution:
+        parts = resolution.split("x")
+        try:
+            return (int(parts[0]), int(parts[1]))
+        except (ValueError, IndexError):
+            pass
+
+    # Default to 720p
+    return (1280, 720)
 
 
 async def process_video_job(ctx: dict, job_id: str, task_type: str) -> dict:
     """
     Main worker function: process a video generation job.
 
-    Steps:
+    Full pipeline:
     1. Load job from DB, update status to 'processing'
-    2. Resolve model adapter
-    3. Run inference (mock for now)
-    4. Save output, update job status to 'completed'
-
-    This is a skeleton — actual model inference is added in Step 1.4.
+    2. Resolve model → get adapter
+    3. Load model if not already loaded
+    4. Run inference via adapter
+    5. Save output, update job status + metadata
     """
-    logger.info(f"Processing job {job_id} (task_type={task_type})")
+    logger.info(f"[Worker] Processing job {job_id} (task_type={task_type})")
 
     async with async_session_factory() as session:
-        # Fetch job from database
+        # ── Step 1: Fetch job ──
         job = await session.get(Job, job_id)
         if not job:
-            logger.error(f"Job {job_id} not found in database")
+            logger.error(f"[Worker] Job {job_id} not found in database")
             return {"status": "error", "message": "Job not found"}
 
         # Check if cancelled before processing
         if job.status == "cancelled":
-            logger.info(f"Job {job_id} was cancelled, skipping")
+            logger.info(f"[Worker] Job {job_id} was cancelled, skipping")
             return {"status": "cancelled"}
 
         started_at = datetime.now(timezone.utc)
 
         try:
-            # Update status to processing
+            # Update status → processing
             job.status = "processing"
             job.started_at = started_at
+
+            # Calculate queue time (handle naive/aware datetime mismatch from SQLite)
+            if job.created_at:
+                created = job.created_at
+                if created.tzinfo is None:
+                    created = created.replace(tzinfo=timezone.utc)
+                job.queue_time_seconds = (started_at - created).total_seconds()
+            else:
+                job.queue_time_seconds = 0.0
+
             await session.commit()
 
-            # --- MOCK INFERENCE (replaced in Step 1.4 with real model adapter) ---
-            logger.info(f"Job {job_id}: Running mock inference for {task_type}")
+            # ── Step 2: Resolve model + adapter ──
+            model_id = job.model_id
+            adapter_name = DEFAULT_ADAPTER
 
-            # Simulate work — in production this calls the model adapter
-            # from model_adapters import get_adapter
-            # adapter = get_adapter(job.model_id)
-            # result = await adapter.generate(job.inputs, job.generation_params)
+            if model_id and model_id != "auto":
+                # Look up the model in the registry to get its adapter_name
+                model = await session.get(AIModel, model_id)
+                if model:
+                    adapter_name = model.adapter_name or DEFAULT_ADAPTER
+                else:
+                    logger.warning(
+                        f"[Worker] Model '{model_id}' not found in registry, using '{DEFAULT_ADAPTER}'"
+                    )
+            else:
+                # Auto mode — pick first available model (simplified)
+                # In Phase 2 this becomes the smart model router
+                model_id = "auto"
+                logger.info(f"[Worker] Job {job_id} using auto model selection → mock adapter")
 
-            import asyncio
-            await asyncio.sleep(2)  # Simulate 2s inference
+            adapter = get_adapter_instance(
+                model_id=model_id,
+                adapter_name=adapter_name,
+            )
 
-            # Mock output
-            output_path = f"outputs/{job_id}.mp4"
-            thumbnail_path = f"outputs/{job_id}_thumb.jpg"
+            # ── Step 3: Load model if needed ──
+            load_model_start = time.time()
 
-            # --- END MOCK ---
+            if not adapter.is_loaded:
+                job.status = "loading_model"
+                await session.commit()
 
+                logger.info(f"[Worker] Loading model '{model_id}' via adapter '{adapter_name}'")
+                await adapter.load_model()
+
+            load_model_time = time.time() - load_model_start
+            job.load_model_time_seconds = round(load_model_time, 2)
+
+            # ── Step 4: Build request + run inference ──
+            job.status = "processing"
+            await session.commit()
+
+            # Parse generation params
+            gen_params = job.generation_params or {}
+            inputs = job.inputs or {}
+            resolution = gen_params.get("resolution", "720p")
+            width, height = _resolve_resolution(resolution)
+
+            request = GenerationRequest(
+                job_id=job_id,
+                task_type=TaskType(task_type),
+                prompt=inputs.get("prompt", ""),
+                negative_prompt=inputs.get("negative_prompt", ""),
+                image_path=inputs.get("image_path"),
+                duration=gen_params.get("duration", 5.0),
+                width=width,
+                height=height,
+                fps=gen_params.get("fps", 24),
+                seed=gen_params.get("seed"),
+                guidance_scale=gen_params.get("guidance_scale", 7.5),
+                num_inference_steps=gen_params.get("num_inference_steps", 50),
+                output_dir=str(settings.output_dir),
+            )
+
+            inference_start = time.time()
+            result: GenerationResult = await adapter.generate(request)
+            inference_time = time.time() - inference_start
+
+            # ── Step 5: Update job with results ──
             completed_at = datetime.now(timezone.utc)
             total_time = (completed_at - started_at).total_seconds()
 
-            # Update job with results
             job.status = "completed"
-            job.output_path = output_path
-            job.thumbnail_path = thumbnail_path
-            job.output_metadata = {
-                "width": 1280,
-                "height": 720,
-                "duration": job.generation_params.get("duration", 5.0),
-                "fps": job.generation_params.get("fps", 24),
-                "file_size_mb": 0.0,  # Mock
-            }
+            job.output_path = result.output_path
+            job.thumbnail_path = result.thumbnail_path
+            job.output_metadata = result.to_output_metadata()
             job.completed_at = completed_at
-            job.total_time_seconds = total_time
-            job.inference_time_seconds = total_time  # All time is "inference" in mock
-            job.queue_time_seconds = (
-                (started_at - job.created_at).total_seconds() if job.created_at else None
-            )
+            job.inference_time_seconds = round(inference_time, 2)
+            job.total_time_seconds = round(total_time, 2)
+            job.peak_vram_gb = result.peak_vram_gb
 
             await session.commit()
-            logger.info(f"Job {job_id} completed in {total_time:.1f}s")
 
-            return {"status": "completed", "output_path": output_path}
+            # Update model stats (non-critical)
+            try:
+                if model_id and model_id != "auto":
+                    model = await session.get(AIModel, model_id)
+                    if model:
+                        model.total_jobs_completed = (model.total_jobs_completed or 0) + 1
+                        # Running average of inference time
+                        if model.avg_inference_time_seconds:
+                            model.avg_inference_time_seconds = round(
+                                (model.avg_inference_time_seconds + inference_time) / 2, 2
+                            )
+                        else:
+                            model.avg_inference_time_seconds = round(inference_time, 2)
+                        if result.peak_vram_gb:
+                            model.avg_vram_usage_gb = result.peak_vram_gb
+                        await session.commit()
+            except Exception as e:
+                logger.warning(f"[Worker] Failed to update model stats: {e}")
+
+            logger.info(
+                f"[Worker] Job {job_id} completed in {total_time:.1f}s "
+                f"(load={load_model_time:.1f}s, inference={inference_time:.1f}s)"
+            )
+
+            return {
+                "status": "completed",
+                "output_path": result.output_path,
+                "total_time": round(total_time, 2),
+            }
 
         except Exception as e:
-            logger.error(f"Job {job_id} failed: {e}", exc_info=True)
+            logger.error(f"[Worker] Job {job_id} failed: {e}", exc_info=True)
 
             # Update job status to failed
             job.status = "failed"
-            job.error_message = str(e)
-            job.retry_count += 1
+            job.error_message = str(e)[:1000]  # Truncate long errors
+            job.completed_at = datetime.now(timezone.utc)
+            job.total_time_seconds = (
+                (job.completed_at - started_at).total_seconds() if started_at else None
+            )
+            job.retry_count = (job.retry_count or 0) + 1
             await session.commit()
 
-            # Let arq handle retry if max_retries not exceeded
+            # Re-raise if retries remaining so arq can retry
             if job.retry_count < job.max_retries:
-                raise  # arq will retry
+                logger.info(
+                    f"[Worker] Job {job_id} will retry "
+                    f"({job.retry_count}/{job.max_retries})"
+                )
+                raise
+
+            logger.error(
+                f"[Worker] Job {job_id} exhausted all retries "
+                f"({job.retry_count}/{job.max_retries})"
+            )
             return {"status": "failed", "error": str(e)}
 
 
 async def startup(ctx: dict) -> None:
     """Worker startup hook — runs once when the worker process starts."""
-    logger.info("Worker starting up...")
-    # Future: pre-load models, warm up GPU, etc.
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
+    logger.info("=" * 60)
+    logger.info("[Worker] Starting up...")
+    logger.info(f"[Worker] Output directory: {settings.output_dir}")
+    logger.info(f"[Worker] Concurrency: {settings.worker_concurrency}")
+    logger.info(f"[Worker] Job timeout: {settings.job_timeout_seconds}s")
+    logger.info("=" * 60)
+
+    # Ensure output directory exists
+    settings.output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Log registered adapters
+    from model_adapters import list_registered_adapters
+    logger.info(f"[Worker] Registered adapters: {list_registered_adapters()}")
 
 
 async def shutdown(ctx: dict) -> None:
-    """Worker shutdown hook — runs once when the worker process stops."""
-    logger.info("Worker shutting down...")
-    # Future: unload models, cleanup VRAM
+    """Worker shutdown hook — unload all models and cleanup."""
+    logger.info("[Worker] Shutting down...")
+
+    # Unload all loaded adapters
+    loaded = list_loaded_instances()
+    if loaded:
+        logger.info(f"[Worker] Unloading {len(loaded)} adapter(s)...")
+        from model_adapters import _ADAPTER_INSTANCES, remove_adapter_instance
+
+        for model_id, adapter in list(_ADAPTER_INSTANCES.items()):
+            try:
+                if adapter.status in (AdapterStatus.READY, AdapterStatus.GENERATING):
+                    await adapter.unload_model()
+                remove_adapter_instance(model_id)
+            except Exception as e:
+                logger.warning(f"[Worker] Error unloading '{model_id}': {e}")
+
+    logger.info("[Worker] Shutdown complete")
 
 
 # --- arq WorkerSettings ---
-
-settings = get_settings()
 
 
 class WorkerSettings:

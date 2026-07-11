@@ -163,8 +163,8 @@ export interface DashboardStats {
 // === Storage Types ===
 
 export interface StorageStats {
-  total_size_gb: number;
-  uploads_size_gb: number;
-  outputs_size_gb: number;
-  models_size_gb: number;
+  uploads: { size_mb: number; count: number };
+  outputs: { size_mb: number; count: number };
+  models: { size_mb: number };
+  total_size_mb: number;
 }

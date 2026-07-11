@@ -1,0 +1,34 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# Node
+apps/web/node_modules/
+apps/web/.next/
+
+# Data (mounted as volumes)
+data/
+uploads/
+outputs/
+models/
+logs/
+
+# IDE
+.vscode/
+.idea/
+.kiro/
+
+# Git
+.git/
+.gitignore
+
+# Docker
+docker-compose.dev.yml
+
+# Misc
+*.log
+.env
+.env.local

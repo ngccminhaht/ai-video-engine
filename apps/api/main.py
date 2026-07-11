@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from apps.api.config import get_settings
-from apps.api.routers import health, jobs, models
+from apps.api.routers import health, jobs, models, storage, workers
 
 
 @asynccontextmanager
@@ -64,6 +64,8 @@ def create_app() -> FastAPI:
     app.include_router(health.router, tags=["Health"])
     app.include_router(models.router, prefix="/api/v1/models", tags=["Models"])
     app.include_router(jobs.router, prefix="/api/v1/jobs", tags=["Jobs"])
+    app.include_router(storage.router, prefix="/api/v1", tags=["Storage"])
+    app.include_router(workers.router, prefix="/api/v1", tags=["Workers & Stats"])
 
     return app
 

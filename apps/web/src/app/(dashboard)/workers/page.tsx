@@ -1,10 +1,12 @@
 "use client";
 
-import { mockWorkers } from "@/mocks/workers";
+import { useWorkers } from "@/features/dashboard/hooks/use-dashboard";
 import { cn } from "@/lib/utils";
-import { Activity } from "lucide-react";
+import { Activity, Loader2 } from "lucide-react";
 
 export default function WorkersPage() {
+  const { data: workers, isLoading } = useWorkers();
+  const workerList = workers || [];
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -48,7 +50,7 @@ export default function WorkersPage() {
               </tr>
             </thead>
             <tbody>
-              {mockWorkers.map((worker) => (
+              {workerList.map((worker) => (
                 <tr
                   key={worker.id}
                   className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors"
