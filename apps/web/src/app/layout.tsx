@@ -1,38 +1,47 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/lib/query/provider";
 import { AuthProvider } from "@/lib/auth/provider";
 import { Toaster } from "sonner";
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-manrope",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "AI Video Platform",
+  title: "Revid.IO",
   description: "Multi-model AI video generation engine",
 };
 
-export default function RootLayout({
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased`}>
-        <QueryProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-          <Toaster
-            position="top-right"
-            richColors
-            closeButton
-          />
-        </QueryProvider>
+    <html lang={locale}>
+      <body className={`${manrope.variable} font-sans antialiased`}>
+        <NextIntlClientProvider messages={messages}>
+          <QueryProvider>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+            <Toaster
+              position="top-right"
+              richColors
+              closeButton
+            />
+          </QueryProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

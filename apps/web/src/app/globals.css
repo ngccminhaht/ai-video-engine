@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @import "tailwindcss/theme" theme(reference);
 
+@source "../components";
+@source "../features";
+@source "../lib";
+@source "../types";
+@source "../config";
+
 @custom-variant dark (&:is(.dark *));
 @custom-variant admin (&:is(.admin-theme *));
 
@@ -33,9 +39,9 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-sans: "Manrope", system-ui, -apple-system, sans-serif;
 
-  /* Admin theme extended tokens */
+  /* Extended tokens */
   --color-primary-soft: var(--primary-soft);
   --color-primary-subtle: var(--primary-subtle);
   --color-surface-secondary: var(--surface-secondary);
@@ -49,62 +55,70 @@
   --color-danger-soft: var(--danger-soft);
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
+
+  /* Shadows — warm tones for red theme */
+  --shadow-xs: 0px 1px 2px rgba(71, 24, 29, 0.04);
+  --shadow-sm: 0px 1px 2px rgba(71, 24, 29, 0.04), 0px 1px 3px rgba(71, 24, 29, 0.06);
+  --shadow-md: 0px 2px 4px -2px rgba(71, 24, 29, 0.04), 0px 4px 8px -2px rgba(71, 24, 29, 0.08);
+  --shadow-lg: 0px 4px 6px -2px rgba(71, 24, 29, 0.03), 0px 12px 16px -4px rgba(71, 24, 29, 0.06);
+  --shadow-xl: 0px 8px 8px -4px rgba(71, 24, 29, 0.03), 0px 20px 24px -4px rgba(71, 24, 29, 0.06);
+  --shadow-2xl: 0px 24px 48px -12px rgba(71, 24, 29, 0.14);
 }
 
 /* ═══════════════════════════════════════════
    Light Theme (default — end-user, public)
    ═══════════════════════════════════════════ */
 :root {
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   --background: #ffffff;
-  --foreground: #0a0a0a;
+  --foreground: #241719;
   --card: #ffffff;
-  --card-foreground: #0a0a0a;
+  --card-foreground: #241719;
   --popover: #ffffff;
-  --popover-foreground: #0a0a0a;
-  --primary: #111111;
+  --popover-foreground: #241719;
+  --primary: #C5242D;
   --primary-foreground: #ffffff;
-  --secondary: #f7f7f7;
-  --secondary-foreground: #0a0a0a;
-  --muted: #f7f7f7;
-  --muted-foreground: #666666;
-  --accent: #f7f7f7;
-  --accent-foreground: #0a0a0a;
-  --destructive: #dc2626;
+  --secondary: #FFF8F7;
+  --secondary-foreground: #241719;
+  --muted: #F3E9E9;
+  --muted-foreground: #847174;
+  --accent: #FCEDEA;
+  --accent-foreground: #241719;
+  --destructive: #D92D20;
   --destructive-foreground: #ffffff;
-  --border: #e5e5e5;
-  --input: #e5e5e5;
-  --ring: #111111;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #0a0a0a;
-  --sidebar-border: #e5e5e5;
-  --sidebar-accent: #111111;
-  --sidebar-accent-foreground: #ffffff;
+  --border: #EBDCDD;
+  --input: #EBDCDD;
+  --ring: #C5242D;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #625154;
+  --sidebar-border: #EBDCDD;
+  --sidebar-accent: #FFF0F0;
+  --sidebar-accent-foreground: #C5242D;
 
-  /* Defaults for extended tokens (light) */
-  --primary-soft: #f7f7f7;
-  --primary-subtle: #fafafa;
-  --surface-secondary: #f7f7f7;
-  --surface-tertiary: #f0f0f0;
-  --surface-hover: #fafafa;
+  /* Extended tokens */
+  --primary-soft: #FFF0F0;
+  --primary-subtle: #FFF8F7;
+  --surface-secondary: #FFF8F7;
+  --surface-tertiary: #FCEDEA;
+  --surface-hover: #FFF3F2;
   --success: #178553;
-  --success-soft: #eaf8f1;
-  --warning: #b66a00;
-  --warning-soft: #fff5df;
-  --danger: #dc2626;
-  --danger-soft: #fff0ef;
-  --info: #3568b8;
-  --info-soft: #eef4ff;
+  --success-soft: #EAF8F1;
+  --warning: #B66A00;
+  --warning-soft: #FFF5DF;
+  --danger: #D92D20;
+  --danger-soft: #FFF0EF;
+  --info: #3568B8;
+  --info-soft: #EEF4FF;
 }
 
 /* ═══════════════════════════════════════════
-   Admin Theme — Red-White Creative Studio
+   Admin Theme — Premium Red Creative Studio
    Applied via class="admin-theme" on layout
    ═══════════════════════════════════════════ */
 .admin-theme {
   --radius: 0.75rem;
 
-  /* Application backgrounds */
+  /* Application backgrounds — warm off-white */
   --background: #F8F5F4;
   --foreground: #241719;
 
@@ -114,7 +128,7 @@
   --popover: #FFFFFF;
   --popover-foreground: #241719;
 
-  /* Brand / Primary */
+  /* Brand / Primary — Crimson Red */
   --primary: #C5242D;
   --primary-foreground: #FFFFFF;
   --primary-soft: #FFF0F0;
@@ -136,17 +150,17 @@
   --destructive: #D92D20;
   --destructive-foreground: #FFFFFF;
 
-  /* Borders */
+  /* Borders — warm rose-tinted */
   --border: #EBDCDD;
   --input: #EBDCDD;
   --ring: #C5242D;
 
-  /* Sidebar — Burgundy */
-  --sidebar: #7F1D24;
-  --sidebar-foreground: #FDEBEC;
-  --sidebar-border: rgba(255, 255, 255, 0.12);
-  --sidebar-accent: #FFFFFF;
-  --sidebar-accent-foreground: #9F1D26;
+  /* Sidebar — White with border (aihive style) */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #625154;
+  --sidebar-border: #EBDCDD;
+  --sidebar-accent: #FFF0F0;
+  --sidebar-accent-foreground: #C5242D;
 
   /* Extended surfaces */
   --surface-secondary: #FFF8F7;
@@ -163,13 +177,13 @@
   --info: #3568B8;
   --info-soft: #EEF4FF;
 
-  /* Admin-specific tokens */
-  --sidebar-surface: #8F222A;
-  --sidebar-hover: #A42A32;
-  --sidebar-active-bg: #FFFFFF;
-  --sidebar-active-text: #9F1D26;
-  --sidebar-text: #FDEBEC;
-  --sidebar-muted: #EAB7BA;
+  /* Admin-specific tokens — white sidebar like aihive */
+  --sidebar-surface: #FFFFFF;
+  --sidebar-hover: #F8F5F4;
+  --sidebar-active-bg: #FFF0F0;
+  --sidebar-active-text: #C5242D;
+  --sidebar-text: #625154;
+  --sidebar-muted: #A99699;
 
   --header-background: #FFFFFF;
   --header-border: #EBDCDD;
@@ -209,64 +223,34 @@
 }
 
 /* ═══════════════════════════════════════════
-   Dark Theme (kept for potential other use)
-   Applied via class="dark" on parent element
-   ═══════════════════════════════════════════ */
-.dark {
-  --background: oklch(0.145 0.014 285.82);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.178 0.014 285.82);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.178 0.014 285.82);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.62 0.19 264);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.22 0.014 285.82);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.22 0.014 285.82);
-  --muted-foreground: oklch(0.556 0.014 285.82);
-  --accent: oklch(0.22 0.014 285.82);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.28 0.014 285.82);
-  --input: oklch(0.28 0.014 285.82);
-  --ring: oklch(0.62 0.19 264);
-  --sidebar: oklch(0.12 0.014 285.82);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.24 0.014 285.82);
-  --sidebar-accent: oklch(0.62 0.19 264);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-
-  --primary-soft: oklch(0.22 0.014 285.82);
-  --primary-subtle: oklch(0.18 0.014 285.82);
-  --surface-secondary: oklch(0.20 0.014 285.82);
-  --surface-tertiary: oklch(0.22 0.014 285.82);
-  --surface-hover: oklch(0.25 0.014 285.82);
-  --success: #34d399;
-  --success-soft: rgba(52, 211, 153, 0.1);
-  --warning: #fbbf24;
-  --warning-soft: rgba(251, 191, 36, 0.1);
-  --danger: #f87171;
-  --danger-soft: rgba(248, 113, 113, 0.1);
-  --info: #60a5fa;
-  --info-soft: rgba(96, 165, 250, 0.1);
-}
-
-/* ═══════════════════════════════════════════
    Base Styles
    ═══════════════════════════════════════════ */
 * {
+  box-sizing: border-box;
   border-color: var(--border);
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow: hidden;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
 /* ═══════════════════════════════════════════
-   Scrollbar Styling
+   Scrollbar Styling — warm subtle
    ═══════════════════════════════════════════ */
 ::-webkit-scrollbar {
   width: 6px;
@@ -278,28 +262,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.75 0 0);
+  background: #DABFC1;
   border-radius: 3px;
 }
 
-.admin-theme ::-webkit-scrollbar-thumb {
-  background: #DABFC1;
-}
-
-.admin-theme ::-webkit-scrollbar-thumb:hover {
-  background: #A99699;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: oklch(0.3 0.014 285.82);
-}
-
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.6 0 0);
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.4 0.014 285.82);
+  background: #A99699;
 }
 
 /* ═══════════════════════════════════════════
@@ -313,13 +281,141 @@ body {
   box-shadow: var(--shadow-floating);
 }
 
-/* Focus ring utility */
 .admin-theme .focus-ring {
   outline: none;
   box-shadow: 0 0 0 4px var(--focus-ring);
 }
 
-/* Range slider styling for admin theme */
+/* ═══════════════════════════════════════════
+   Button System — Red Creative Studio
+   ═══════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  height: 36px;
+  line-height: 1.25;
+  border-radius: 0.625rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 150ms ease;
+  border: none;
+}
+
+.btn-default {
+  border: 1px solid #EBDCDD;
+  color: #241719;
+  background: #ffffff;
+}
+
+.btn-default:hover {
+  background: #FFF8F7;
+  border-color: #DABFC1;
+  box-shadow: 0px 1px 2px rgba(71, 24, 29, 0.04);
+}
+
+.btn-primary {
+  background-color: #C5242D;
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background-color: #A91D25;
+  box-shadow: 0px 1px 2px rgba(71, 24, 29, 0.06);
+}
+
+.btn-primary:active {
+  background-color: #8F1820;
+}
+
+.btn-primary:disabled {
+  background-color: #E8DDDE;
+  color: #A99699;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #9F1D26;
+  border: 1px solid #F3C4C6;
+}
+
+.btn-secondary:hover {
+  background: #FFF0F0;
+  border-color: #C5242D;
+}
+
+.btn-warning {
+  background-color: #D92D20;
+  color: #ffffff;
+}
+
+.btn-warning:hover {
+  background-color: rgba(217, 45, 32, 0.85);
+}
+
+/* ═══════════════════════════════════════════
+   Card System
+   ═══════════════════════════════════════════ */
+.card-admin {
+  background: #ffffff;
+  border: 1px solid #EBDCDD;
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px rgba(71, 24, 29, 0.04), 0 8px 24px rgba(71, 24, 29, 0.05);
+  transition: all 200ms ease-in-out;
+}
+
+.card-admin:hover {
+  box-shadow: 0 4px 6px -2px rgba(71, 24, 29, 0.03), 0 12px 16px -4px rgba(71, 24, 29, 0.06);
+}
+
+/* ═══════════════════════════════════════════
+   Input System
+   ═══════════════════════════════════════════ */
+.input-admin {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.75rem;
+  border: 1px solid #EBDCDD;
+  background: #ffffff;
+  color: #241719;
+  font-size: 0.875rem;
+  transition: all 150ms ease;
+}
+
+.input-admin::placeholder {
+  color: #A99699;
+}
+
+.input-admin:hover {
+  border-color: #DABFC1;
+}
+
+.input-admin:focus {
+  outline: none;
+  border-color: #C5242D;
+  box-shadow: 0 0 0 4px rgba(197, 36, 45, 0.18);
+}
+
+/* ═══════════════════════════════════════════
+   Modal styles — rounded-2xl with warm shadow
+   ═══════════════════════════════════════════ */
+.modal-panel {
+  width: 100%;
+  max-width: 28rem;
+  border-radius: 1rem;
+  background: #ffffff;
+  padding: 1.5rem;
+  text-align: left;
+  box-shadow: 0 12px 32px rgba(71, 24, 29, 0.10);
+}
+
+/* ═══════════════════════════════════════════
+   Range slider — crimson accent
+   ═══════════════════════════════════════════ */
 .admin-theme input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -351,11 +447,25 @@ body {
   box-shadow: 0 1px 3px rgba(71, 24, 29, 0.2);
 }
 
-/* Reduced motion */
+/* ═══════════════════════════════════════════
+   No scrollbar utility
+   ═══════════════════════════════════════════ */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ═══════════════════════════════════════════
+   Reduced motion
+   ═══════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  .admin-theme *,
-  .admin-theme *::before,
-  .admin-theme *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

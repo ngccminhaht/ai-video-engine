@@ -147,12 +147,12 @@ export default function GenerateVideoPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-8">
       {/* Page Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between">
         <div>
           <h1
-            className="text-[28px] font-bold tracking-tight"
+            className="text-[32px] font-bold tracking-tight"
             style={{ color: "var(--text-primary)" }}
           >
             Generate video
@@ -161,7 +161,7 @@ export default function GenerateVideoPage() {
             Create, configure and run AI video generations.
           </p>
         </div>
-        <div className="flex items-center gap-2 max-sm:hidden">
+        <div className="flex items-center gap-2 max-sm:hidden shrink-0">
           <Link
             href="/admin/jobs"
             className="px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150"
@@ -191,7 +191,7 @@ export default function GenerateVideoPage() {
             </p>
             <Link
               href={`/admin/jobs/${lastJobId}`}
-              className="text-xs font-medium hover:underline"
+              className="text-[13px] font-medium hover:underline"
               style={{ color: "var(--success)" }}
             >
               View job #{lastJobId.slice(0, 8)} →
@@ -209,12 +209,12 @@ export default function GenerateVideoPage() {
       )}
 
       {/* Workflow Selector */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <button
           type="button"
           onClick={() => setActiveTab("text_to_video")}
           className={cn(
-            "flex items-start gap-4 p-4 rounded-xl border-2 transition-all duration-150 text-left",
+            "flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-150 text-left",
           )}
           style={
             activeTab === "text_to_video"
@@ -243,7 +243,7 @@ export default function GenerateVideoPage() {
               }}
             />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <p
               className="text-sm font-semibold"
               style={{
@@ -257,7 +257,7 @@ export default function GenerateVideoPage() {
             </p>
           </div>
           {activeTab === "text_to_video" && (
-            <CheckCircle className="w-5 h-5 shrink-0 ml-auto" style={{ color: "var(--primary)" }} />
+            <CheckCircle className="w-5 h-5 shrink-0" style={{ color: "var(--primary)" }} />
           )}
         </button>
 
@@ -265,7 +265,7 @@ export default function GenerateVideoPage() {
           type="button"
           onClick={() => setActiveTab("image_to_video")}
           className={cn(
-            "flex items-start gap-4 p-4 rounded-xl border-2 transition-all duration-150 text-left",
+            "flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-150 text-left",
           )}
           style={
             activeTab === "image_to_video"
@@ -294,7 +294,7 @@ export default function GenerateVideoPage() {
               }}
             />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <p
               className="text-sm font-semibold"
               style={{
@@ -308,25 +308,25 @@ export default function GenerateVideoPage() {
             </p>
           </div>
           {activeTab === "image_to_video" && (
-            <CheckCircle className="w-5 h-5 shrink-0 ml-auto" style={{ color: "var(--primary)" }} />
+            <CheckCircle className="w-5 h-5 shrink-0" style={{ color: "var(--primary)" }} />
           )}
         </button>
       </div>
 
       {/* Main Content: Form + Summary */}
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
         {/* Left Column: Form Sections */}
-        <div className="space-y-5">
+        <div className="flex flex-col gap-8">
           {/* Section 1: Creative Input */}
           <section
-            className="rounded-2xl p-6"
+            className="rounded-2xl p-6 md:p-8"
             style={{
               background: "var(--card)",
               border: "1px solid var(--border-default)",
               boxShadow: "var(--shadow-card)",
             }}
           >
-            <div className="flex items-center gap-2.5 mb-5">
+            <div className="flex items-center gap-3 mb-5">
               <div
                 className="flex items-center justify-center w-8 h-8 rounded-lg"
                 style={{ background: "var(--primary-soft)" }}
@@ -434,14 +434,14 @@ export default function GenerateVideoPage() {
           {/* Section 2: Reference Image (only for I2V) */}
           {activeTab === "image_to_video" && (
             <section
-              className="rounded-2xl p-6"
+              className="rounded-2xl p-6 md:p-8"
               style={{
                 background: "var(--card)",
                 border: "1px solid var(--border-default)",
                 boxShadow: "var(--shadow-card)",
               }}
             >
-              <div className="flex items-center gap-2.5 mb-5">
+              <div className="flex items-center gap-3 mb-5">
                 <div
                   className="flex items-center justify-center w-8 h-8 rounded-lg"
                   style={{ background: "var(--primary-soft)" }}
@@ -567,7 +567,7 @@ export default function GenerateVideoPage() {
                     )}
                     <div className="flex items-center gap-2 mt-3">
                       <label
-                        className="text-xs font-medium px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
+                        className="text-[13px] font-medium px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
                         style={{
                           background: "var(--primary-soft)",
                           color: "var(--primary)",
@@ -580,7 +580,7 @@ export default function GenerateVideoPage() {
                       <button
                         type="button"
                         onClick={removeImage}
-                        className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+                        className="text-[13px] font-medium px-3 py-1.5 rounded-lg transition-colors"
                         style={{
                           background: "var(--danger-soft)",
                           color: "var(--danger)",
@@ -612,14 +612,14 @@ export default function GenerateVideoPage() {
 
           {/* Section 3: Video Settings */}
           <section
-            className="rounded-2xl p-6"
+            className="rounded-2xl p-6 md:p-8"
             style={{
               background: "var(--card)",
               border: "1px solid var(--border-default)",
               boxShadow: "var(--shadow-card)",
             }}
           >
-            <div className="flex items-center gap-2.5 mb-5">
+            <div className="flex items-center gap-3 mb-5">
               <div
                 className="flex items-center justify-center w-8 h-8 rounded-lg"
                 style={{ background: "var(--primary-soft)" }}
@@ -845,11 +845,11 @@ export default function GenerateVideoPage() {
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="w-full flex items-center justify-between p-6 transition-colors duration-150"
+              className="w-full flex items-center justify-between p-6 md:p-8 transition-colors duration-150"
               style={{ color: "var(--text-primary)" }}
               aria-expanded={showAdvanced}
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-3">
                 <div
                   className="flex items-center justify-center w-8 h-8 rounded-lg"
                   style={{ background: "var(--surface-tertiary)" }}
@@ -874,7 +874,7 @@ export default function GenerateVideoPage() {
 
             {showAdvanced && (
               <div
-                className="px-6 pb-6 space-y-5"
+                className="px-6 md:px-8 pb-6 md:pb-8 space-y-5"
                 style={{ borderTop: "1px solid var(--border-subtle)" }}
               >
                 <div className="pt-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -936,10 +936,10 @@ export default function GenerateVideoPage() {
         </div>
 
         {/* Right Column: Summary + CTA */}
-        <div className="lg:sticky lg:top-6 space-y-5">
+        <div className="lg:sticky lg:top-6 space-y-8 min-w-0">
           {/* Generation Summary */}
           <div
-            className="rounded-2xl p-5"
+            className="rounded-2xl p-6 md:p-8 overflow-hidden"
             style={{
               background: "var(--card)",
               border: "1px solid var(--border-default)",
@@ -953,7 +953,7 @@ export default function GenerateVideoPage() {
             <div className="space-y-3">
               {/* Task */}
               <div className="flex justify-between items-center">
-                <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                <span className="text-[13px] font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                   Task
                 </span>
                 <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
@@ -965,7 +965,7 @@ export default function GenerateVideoPage() {
 
               {/* Model */}
               <div className="flex justify-between items-start">
-                <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                <span className="text-[13px] font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                   Model
                 </span>
                 <div className="text-right">
@@ -991,7 +991,7 @@ export default function GenerateVideoPage() {
 
               {/* Output */}
               <div className="flex justify-between items-center">
-                <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                <span className="text-[13px] font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                   Output
                 </span>
                 <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
@@ -1003,13 +1003,13 @@ export default function GenerateVideoPage() {
 
               {/* Resource Estimate */}
               <div>
-                <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                <span className="text-[13px] font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                   Resource estimate
                 </span>
                 <div className="mt-2 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs flex items-center gap-1.5" style={{ color: "var(--text-tertiary)" }}>
-                      <Cpu className="w-3.5 h-3.5" style={{ color: "var(--primary)" }} />
+                    <span className="text-xs flex items-center gap-2" style={{ color: "var(--text-tertiary)" }}>
+                      <Cpu className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--primary)" }} />
                       VRAM
                     </span>
                     <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
@@ -1031,8 +1031,8 @@ export default function GenerateVideoPage() {
                     </div>
                   )}
                   <div className="flex justify-between items-center">
-                    <span className="text-xs flex items-center gap-1.5" style={{ color: "var(--text-tertiary)" }}>
-                      <Clock className="w-3.5 h-3.5" style={{ color: "var(--primary)" }} />
+                    <span className="text-xs flex items-center gap-2" style={{ color: "var(--text-tertiary)" }}>
+                      <Clock className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--primary)" }} />
                       Estimated
                     </span>
                     <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
@@ -1046,14 +1046,14 @@ export default function GenerateVideoPage() {
             {/* Warning */}
             {selectedModelData && (
               <div
-                className="mt-4 p-3 rounded-lg flex gap-2"
+                className="mt-4 p-3 rounded-lg flex gap-2 overflow-hidden"
                 style={{
                   background: "var(--warning-soft)",
                   border: "1px solid var(--warning-border)",
                 }}
               >
                 <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "var(--warning)" }} />
-                <p className="text-[11px] leading-relaxed" style={{ color: "var(--warning)" }}>
+                <p className="text-[11px] leading-relaxed min-w-0 break-words" style={{ color: "var(--warning)" }}>
                   Estimates are approximate. Actual time may vary depending on model and system load.
                 </p>
               </div>
@@ -1061,14 +1061,14 @@ export default function GenerateVideoPage() {
 
             {!selectedModelData && !modelsLoading && (
               <div
-                className="mt-4 p-3 rounded-lg flex gap-2"
+                className="mt-4 p-3 rounded-lg flex gap-2 overflow-hidden"
                 style={{
                   background: "var(--info-soft)",
                   border: "1px solid var(--info-border)",
                 }}
               >
                 <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "var(--info)" }} />
-                <p className="text-[11px] leading-relaxed" style={{ color: "var(--info)" }}>
+                <p className="text-[11px] leading-relaxed min-w-0 break-words" style={{ color: "var(--info)" }}>
                   Select a model to see estimated resource usage.
                 </p>
               </div>
@@ -1077,7 +1077,7 @@ export default function GenerateVideoPage() {
 
           {/* Generate CTA */}
           <div
-            className="rounded-2xl p-5"
+            className="rounded-2xl p-6 md:p-8"
             style={{
               background: "var(--card)",
               border: "1px solid var(--border-default)",

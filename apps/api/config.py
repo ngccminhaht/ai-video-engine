@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     )
 
     # App
-    app_name: str = "AI Video Platform"
+    app_name: str = "Revid.IO"
     app_version: str = "0.1.0"
     debug: bool = False
 

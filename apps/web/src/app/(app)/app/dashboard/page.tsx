@@ -10,7 +10,7 @@ export default function UserDashboardPage() {
   const { data, isLoading, error } = useUserDashboard();
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-8">
       {/* Welcome */}
       <div>
         <h1 className="text-2xl font-semibold text-[#0A0A0A]">

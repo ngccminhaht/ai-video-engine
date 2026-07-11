@@ -22,7 +22,7 @@ async def health_check():
 async def root():
     """Root endpoint."""
     return {
-        "message": "AI Video Platform API",
+        "message": "Revid.IO API",
         "docs": "/docs",
         "health": "/health",
     }

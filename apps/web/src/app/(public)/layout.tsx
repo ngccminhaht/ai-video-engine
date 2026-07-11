@@ -10,12 +10,7 @@ export default function PublicLayout({
       <div className="w-full max-w-[400px]">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#111111]">
-            <Video className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-xl font-semibold text-[#0A0A0A]">
-            AI Video Platform
-          </span>
+          <img src="/images/logo-full.png" alt="Revid.IO" className="h-10 w-auto object-contain" />
         </div>
 
         {/* Card */}

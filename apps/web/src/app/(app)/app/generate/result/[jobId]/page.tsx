@@ -199,7 +199,7 @@ export default function ResultPage() {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-4">
+        <div className="flex flex-col gap-6">
           {/* Status */}
           <div className="p-4 rounded-xl border border-[#E5E5E5]">
             <div className="flex items-center gap-2 mb-3">

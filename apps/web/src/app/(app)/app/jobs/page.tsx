@@ -70,7 +70,7 @@ export default function JobsPage() {
   const totalPages = Math.ceil(total / 20);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-2xl font-semibold text-[#0A0A0A]">My Jobs</h1>
         <p className="text-sm text-[#666666] mt-1">Your generation history</p>

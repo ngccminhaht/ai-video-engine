@@ -90,7 +90,7 @@ function ProfileSection() {
         <h2 className="text-lg font-medium text-[#0A0A0A]">Profile</h2>
       </div>
 
-      <div className="space-y-4">
+      <div className="flex flex-col gap-6">
         <div>
           <label className="block text-sm font-medium text-[#0A0A0A] mb-1.5">Display Name</label>
           <input
@@ -164,7 +164,7 @@ function PasswordSection() {
         <h2 className="text-lg font-medium text-[#0A0A0A]">Change Password</h2>
       </div>
 
-      <div className="space-y-4">
+      <div className="flex flex-col gap-6">
         <div>
           <label className="block text-sm font-medium text-[#0A0A0A] mb-1.5">Current Password</label>
           <input

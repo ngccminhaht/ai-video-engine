@@ -10,6 +10,7 @@ import {
   HelpCircle,
   Users,
   ScrollText,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
@@ -30,7 +31,7 @@ export const navGroups: NavGroup[] = [
     label: "Operations",
     items: [
       { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
-      { title: "Generate Video", href: "/admin/generate", icon: Video },
+      { title: "Generate Video", href: "/admin/generate", icon: Sparkles },
       { title: "Jobs", href: "/admin/jobs", icon: ListVideo },
     ],
   },
@@ -61,6 +62,6 @@ export const bottomNavItems: NavItem[] = [
 ];
 
 export const siteConfig = {
-  name: "AI Video Platform",
+  name: "Revid.IO",
   description: "Multi-model AI video generation engine",
 };

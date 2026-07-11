@@ -1,29 +1,23 @@
 import { cn } from "@/lib/utils";
 import type { JobStatus, ModelStatus } from "@/types";
 
-const jobStatusConfig: Record<
-  JobStatus,
-  { label: string; className: string }
-> = {
-  pending: { label: "Pending", className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" },
-  queued: { label: "Queued", className: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-  loading_model: { label: "Loading Model", className: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
-  processing: { label: "Processing", className: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-  post_processing: { label: "Post Processing", className: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" },
-  completed: { label: "Completed", className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-  failed: { label: "Failed", className: "bg-red-500/10 text-red-400 border-red-500/20" },
-  cancelled: { label: "Cancelled", className: "bg-gray-500/10 text-gray-400 border-gray-500/20" },
+const jobStatusConfig: Record<JobStatus, { label: string; className: string }> = {
+  pending: { label: "Pending", className: "bg-[#FFF5DF] text-[#B66A00] border-[#F2D49B]" },
+  queued: { label: "Queued", className: "bg-[#EEF4FF] text-[#3568B8] border-[#C8D8F1]" },
+  loading_model: { label: "Loading Model", className: "bg-[#FFF0F0] text-[#C5242D] border-[#F3C4C6]" },
+  processing: { label: "Processing", className: "bg-[#EEF4FF] text-[#3568B8] border-[#C8D8F1]" },
+  post_processing: { label: "Post Processing", className: "bg-[#FFF0F0] text-[#9F1D26] border-[#F3C4C6]" },
+  completed: { label: "Completed", className: "bg-[#EAF8F1] text-[#178553] border-[#B8E3CF]" },
+  failed: { label: "Failed", className: "bg-[#FFF0EF] text-[#D92D20] border-[#F4B8B3]" },
+  cancelled: { label: "Cancelled", className: "bg-[#F3E9E9] text-[#847174] border-[#EBDCDD]" },
 };
 
-const modelStatusConfig: Record<
-  ModelStatus,
-  { label: string; className: string }
-> = {
-  available: { label: "Available", className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-  loaded: { label: "Loaded", className: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-  loading: { label: "Loading", className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" },
-  disabled: { label: "Disabled", className: "bg-gray-500/10 text-gray-400 border-gray-500/20" },
-  error: { label: "Error", className: "bg-red-500/10 text-red-400 border-red-500/20" },
+const modelStatusConfig: Record<ModelStatus, { label: string; className: string }> = {
+  available: { label: "Available", className: "bg-[#EAF8F1] text-[#178553] border-[#B8E3CF]" },
+  loaded: { label: "Loaded", className: "bg-[#EEF4FF] text-[#3568B8] border-[#C8D8F1]" },
+  loading: { label: "Loading", className: "bg-[#FFF5DF] text-[#B66A00] border-[#F2D49B]" },
+  disabled: { label: "Disabled", className: "bg-[#F3E9E9] text-[#847174] border-[#EBDCDD]" },
+  error: { label: "Error", className: "bg-[#FFF0EF] text-[#D92D20] border-[#F4B8B3]" },
 };
 
 interface StatusBadgeProps {
@@ -36,17 +30,10 @@ export function StatusBadge({ status, type = "job", className }: StatusBadgeProp
   const config = type === "job"
     ? jobStatusConfig[status as JobStatus]
     : modelStatusConfig[status as ModelStatus];
-
   if (!config) return null;
 
   return (
-    <span
-      className={cn(
-        "inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border",
-        config.className,
-        className
-      )}
-    >
+    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border", config.className, className)}>
       {config.label}
     </span>
   );

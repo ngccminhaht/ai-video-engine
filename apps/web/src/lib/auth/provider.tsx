@@ -46,6 +46,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string) => {
+      // Mock login when USE_MOCK_API is enabled
+      if (process.env.NEXT_PUBLIC_USE_MOCK_API === "true") {
+        const mockUser: AuthUser = {
+          id: "mock-admin-001",
+          email,
+          name: "Admin",
+          avatar_url: null,
+          role: "SUPER_ADMIN",
+          status: "active",
+          credits: 1000,
+          email_verified: true,
+          created_at: new Date().toISOString(),
+        };
+        setTokens("mock-access-token", "mock-refresh-token");
+        storeUser(mockUser);
+        setUser(mockUser);
+        router.push("/admin");
+        return;
+      }
+
       const res = await fetch("/api/v1/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

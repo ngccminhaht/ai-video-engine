@@ -63,7 +63,7 @@ export default function UsagePage() {
   if (!data) return <p className="text-[#666666]">Failed to load usage data</p>;
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-2xl font-semibold text-[#0A0A0A]">Usage</h1>
         <p className="text-sm text-[#666666] mt-1">Track your credits and generation history</p>

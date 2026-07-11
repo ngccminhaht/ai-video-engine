@@ -94,7 +94,7 @@ export default function AssetsPage() {
   const totalStorageMb = assets.reduce((sum, a) => sum + a.size_mb, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-[#0A0A0A]">Assets</h1>

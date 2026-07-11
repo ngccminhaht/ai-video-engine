@@ -79,7 +79,7 @@ export default function ForgotPasswordPage() {
         Enter your email and we&apos;ll send you a link to reset your password.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         {error && (
           <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
             {error}
