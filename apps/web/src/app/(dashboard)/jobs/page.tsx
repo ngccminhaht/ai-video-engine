@@ -5,7 +5,8 @@ import { useJobs } from "@/features/jobs/hooks/use-jobs";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { Search, Download, MoreHorizontal, Loader2 } from "lucide-react";
+import { Search, Download, Loader2 } from "lucide-react";
+import { JobActionsMenu } from "@/components/shared/job-actions-menu";
 
 export default function JobsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -165,14 +166,16 @@ export default function JobsPage() {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1">
-                          {job.status === "completed" && (
-                            <button className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                          {job.status === "completed" && job.output_path && (
+                            <a
+                              href={`/api/v1/files/${job.output_path.replace(/^\//, "").replace(/\\/g, "/")}`}
+                              download
+                              className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                            >
                               <Download className="w-3.5 h-3.5" />
-                            </button>
+                            </a>
                           )}
-                          <button className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
-                            <MoreHorizontal className="w-3.5 h-3.5" />
-                          </button>
+                          <JobActionsMenu job={job} />
                         </div>
                       </td>
                     </tr>

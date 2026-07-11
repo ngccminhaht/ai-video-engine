@@ -29,8 +29,8 @@ export const mainNavItems: NavItem[] = [
 ];
 
 export const bottomNavItems: NavItem[] = [
-  { title: "Documentation", href: "#", icon: FileText },
-  { title: "Help & Support", href: "#", icon: HelpCircle },
+  { title: "Documentation", href: "/docs", icon: FileText },
+  { title: "Help & Support", href: "/docs#support", icon: HelpCircle },
 ];
 
 export const siteConfig = {
