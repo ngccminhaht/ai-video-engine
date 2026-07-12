@@ -51,4 +51,13 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     """Get cached settings instance."""
-    return Settings()
+    settings = Settings()
+
+    # Enforce JWT secret in production (non-debug mode)
+    if not settings.debug and "dev-secret" in settings.jwt_secret:
+        raise RuntimeError(
+            "FATAL: JWT_SECRET must be changed from the default value in production. "
+            "Set a strong, unique JWT_SECRET environment variable."
+        )
+
+    return settings

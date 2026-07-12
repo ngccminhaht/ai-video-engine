@@ -4,11 +4,18 @@ import logging
 import mimetypes
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from core.storage import get_storage_service, ALLOWED_EXTENSIONS, ALLOWED_IMAGE_EXTENSIONS, ALLOWED_VIDEO_EXTENSIONS
+from apps.api.dependencies.auth import get_current_user, require_admin
+from core.auth.models import User
+from core.storage import (
+    ALLOWED_EXTENSIONS,
+    ALLOWED_IMAGE_EXTENSIONS,
+    ALLOWED_VIDEO_EXTENSIONS,
+    get_storage_service,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +55,10 @@ class FileListResponse(BaseModel):
 
 
 @router.post("/upload", response_model=UploadResponse, status_code=201)
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user),
+):
     """
     Upload a file (image or video) for use as input in generation jobs.
 
@@ -69,9 +79,9 @@ async def upload_file(file: UploadFile = File(...)):
         )
 
     # Validate MIME content type matches extension
-    ALLOWED_MIME_PREFIXES = ("image/", "video/")
+    allowed_mime_prefixes = ("image/", "video/")
     content_type = file.content_type or mimetypes.guess_type(file.filename)[0] or "application/octet-stream"
-    if not content_type.startswith(ALLOWED_MIME_PREFIXES) and content_type != "application/octet-stream":
+    if not content_type.startswith(allowed_mime_prefixes) and content_type != "application/octet-stream":
         raise HTTPException(
             status_code=400,
             detail=f"Content type '{content_type}' not allowed. Must be image/* or video/*.",
@@ -114,7 +124,7 @@ async def upload_file(file: UploadFile = File(...)):
 
 
 @router.get("/files/{file_path:path}")
-async def serve_file(file_path: str):
+async def serve_file(file_path: str, user: User = Depends(get_current_user)):
     """
     Serve a file from storage (uploads or outputs).
 
@@ -142,7 +152,7 @@ async def serve_file(file_path: str):
 
 
 @router.get("/storage/stats", response_model=StorageStatsResponse)
-async def get_storage_stats():
+async def get_storage_stats(admin: User = Depends(require_admin)):
     """Get storage usage statistics (uploads, outputs, models)."""
     storage = get_storage_service()
     stats = storage.get_storage_stats()
@@ -150,7 +160,7 @@ async def get_storage_stats():
 
 
 @router.get("/storage/outputs", response_model=FileListResponse)
-async def list_output_files(limit: int = 50):
+async def list_output_files(limit: int = 50, admin: User = Depends(require_admin)):
     """List recent output files (generated videos and thumbnails)."""
     storage = get_storage_service()
     files = storage.list_outputs(limit=limit)
@@ -158,7 +168,7 @@ async def list_output_files(limit: int = 50):
 
 
 @router.delete("/files/{file_path:path}")
-async def delete_file(file_path: str):
+async def delete_file(file_path: str, admin: User = Depends(require_admin)):
     """Delete a file from storage."""
     storage = get_storage_service()
     deleted = storage.delete_file(file_path)
@@ -170,7 +180,7 @@ async def delete_file(file_path: str):
 
 
 @router.post("/storage/cleanup")
-async def cleanup_storage(max_age_hours: int = 168):
+async def cleanup_storage(max_age_hours: int = 168, admin: User = Depends(require_admin)):
     """
     Remove files older than specified hours (default: 7 days).
 

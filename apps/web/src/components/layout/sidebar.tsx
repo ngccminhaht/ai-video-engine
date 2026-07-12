@@ -14,6 +14,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { SidebarToggleIcon, ChevronSelectorIcon } from "@/components/icons";
+import { RoleSwitcher } from "@/components/layout/role-switcher";
 import { useState, useEffect, useRef } from "react";
 
 export function Sidebar() {
@@ -64,6 +65,13 @@ export function Sidebar() {
           <SidebarToggleIcon className="w-4 h-4" />
         </button>
       </div>
+
+      {/* Role Switcher */}
+      {!collapsed && (
+        <div className="shrink-0 px-4 pt-4 pb-2">
+          <RoleSwitcher />
+        </div>
+      )}
 
       {/* Navigation Groups */}
       <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-3 no-scrollbar">

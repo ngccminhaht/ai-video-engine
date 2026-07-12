@@ -128,7 +128,7 @@ async def get_project(
     # Get recent jobs
     jobs_result = await db.execute(
         select(Job)
-        .where(Job.project_id == project_id, Job.is_deleted == False)
+        .where(Job.project_id == project_id, not Job.is_deleted)
         .order_by(Job.created_at.desc())
         .limit(20)
     )

@@ -77,7 +77,7 @@ async def generation_events(
                 if await request.is_disconnected():
                     break
                 if event.get("type") == "heartbeat":
-                    yield f"event: heartbeat\ndata: {{}}\n\n"
+                    yield "event: heartbeat\ndata: {}\n\n"
                 else:
                     yield f"data: {json.dumps(event)}\n\n"
 
@@ -128,7 +128,7 @@ async def generation_events(
                         if current.status in ("completed", "failed", "cancelled"):
                             break
                     else:
-                        yield f"event: heartbeat\ndata: {{}}\n\n"
+                        yield "event: heartbeat\ndata: {}\n\n"
 
                 await asyncio.sleep(2)
 

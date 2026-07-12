@@ -1,13 +1,34 @@
 """AI Video Platform - API Server entry point."""
 
+import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from apps.api.config import get_settings
-from apps.api.routers import assets, auth, generation_events, generations, health, jobs, models, options, outputs, projects, storage, usage, users, workers
+from apps.api.routers import (
+    assets,
+    auth,
+    generation_events,
+    generations,
+    health,
+    jobs,
+    models,
+    options,
+    outputs,
+    projects,
+    storage,
+    usage,
+    users,
+    workers,
+)
 from apps.api.routers.admin import router as admin_router
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -66,7 +87,11 @@ def create_app() -> FastAPI:
     # CORS middleware
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins.split(",") if hasattr(settings, "cors_origins") and settings.cors_origins else ["*"],
+        allow_origins=(
+            settings.cors_origins.split(",")
+            if hasattr(settings, "cors_origins") and settings.cors_origins
+            else ["*"]
+        ),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -97,7 +122,76 @@ def create_app() -> FastAPI:
     # --- Admin ---
     app.include_router(admin_router, prefix="/api/v1/admin", tags=["Admin"])
 
+    # --- Exception handlers for consistent error responses ---
+
+    @app.exception_handler(StarletteHTTPException)
+    async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+        """Standardize HTTP error responses."""
+        trace_id = request.headers.get("X-Request-ID", "unknown")
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "error": {
+                    "code": _status_to_code(exc.status_code),
+                    "message": exc.detail if isinstance(exc.detail, str) else str(exc.detail),
+                    "trace_id": trace_id,
+                }
+            },
+        )
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        """Standardize validation error responses."""
+        trace_id = request.headers.get("X-Request-ID", "unknown")
+        errors = exc.errors()
+        message = "; ".join(
+            f"{'.'.join(str(loc) for loc in e.get('loc', []))}: {e.get('msg', '')}"
+            for e in errors[:5]
+        )
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": message,
+                    "trace_id": trace_id,
+                }
+            },
+        )
+
+    @app.exception_handler(Exception)
+    async def general_exception_handler(request: Request, exc: Exception):
+        """Catch-all for unhandled exceptions — never leak stack traces."""
+        trace_id = request.headers.get("X-Request-ID", "unknown")
+        logger.error(f"Unhandled exception [trace={trace_id}]: {exc}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An unexpected error occurred. Please try again later.",
+                    "trace_id": trace_id,
+                }
+            },
+        )
+
     return app
+
+
+def _status_to_code(status: int) -> str:
+    """Map HTTP status codes to error code strings."""
+    codes = {
+        400: "BAD_REQUEST",
+        401: "UNAUTHORIZED",
+        403: "FORBIDDEN",
+        404: "NOT_FOUND",
+        409: "CONFLICT",
+        429: "RATE_LIMITED",
+        500: "INTERNAL_ERROR",
+        501: "NOT_IMPLEMENTED",
+        503: "SERVICE_UNAVAILABLE",
+    }
+    return codes.get(status, f"HTTP_{status}")
 
 
 app = create_app()

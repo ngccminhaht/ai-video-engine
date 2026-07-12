@@ -1,7 +1,6 @@
 """User-facing generation endpoints — create, list, get, cancel."""
 
 import logging
-from datetime import datetime, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -11,7 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ulid import ULID
 
 from apps.api.dependencies.auth import get_current_user
+from core.audit.models import AuditLog
 from core.auth.models import User
+from core.billing.service import create_credit_transaction
 from core.database import get_db
 from core.job_queue import enqueue_job
 from core.job_queue.models import Job
@@ -37,6 +38,7 @@ class GenerationCreateRequest(BaseModel):
     guidance_scale: float = Field(default=7.5, ge=1.0, le=20.0)
     num_inference_steps: int = Field(default=50, ge=10, le=200)
     project_id: Optional[str] = None
+    idempotency_key: Optional[str] = Field(default=None, max_length=100)
 
 
 class GenerationResponse(BaseModel):
@@ -100,6 +102,18 @@ async def create_generation(
 ):
     """Create a new video generation job for the current user."""
 
+    # Idempotency check: if client sends same key, return existing job
+    if data.idempotency_key:
+        result = await db.execute(
+            select(Job).where(
+                Job.user_id == user.id,
+                Job.idempotency_key == data.idempotency_key,
+            )
+        )
+        existing_job = result.scalar_one_or_none()
+        if existing_job:
+            return job_to_response(existing_job)
+
     # Calculate credit cost (simple: 2 credits per second of video)
     credit_cost = int(data.duration * 2)
     if data.resolution == "1080p":
@@ -115,7 +129,16 @@ async def create_generation(
     # Hold credits
     user.credits -= credit_cost
 
+    # Record credit hold transaction
     job_id = str(ULID())
+    await create_credit_transaction(
+        db=db,
+        user_id=user.id,
+        type="hold",
+        amount=-credit_cost,
+        job_id=job_id,
+        note=f"Credit hold for {data.task_type} generation",
+    )
 
     inputs: dict[str, Any] = {"prompt": data.prompt}
     if data.negative_prompt:
@@ -143,6 +166,7 @@ async def create_generation(
         generation_params=generation_params,
         priority=5,
         credits_held=credit_cost,
+        idempotency_key=data.idempotency_key,
     )
 
     db.add(job)
@@ -161,6 +185,15 @@ async def create_generation(
         await db.refresh(job)
 
     logger.info(f"Generation created: {job_id} by user {user.id} (credits_held={credit_cost})")
+
+    # Audit log
+    db.add(AuditLog(
+        id=str(ULID()), user_id=user.id, action="generation_created",
+        resource_type="generation", resource_id=job_id,
+        details={"task_type": data.task_type, "credits_held": credit_cost},
+    ))
+    await db.flush()
+
     return job_to_response(job)
 
 
@@ -175,7 +208,7 @@ async def list_generations(
     page_size: int = Query(default=20, ge=1, le=100),
 ):
     """List current user's generations with optional filters."""
-    query = select(Job).where(Job.user_id == user.id, Job.is_deleted == False)
+    query = select(Job).where(Job.user_id == user.id, not Job.is_deleted)
 
     if status and status != "all":
         query = query.where(Job.status == status)
@@ -242,7 +275,20 @@ async def cancel_generation(
     # Refund credits
     if job.credits_held > 0:
         user.credits += job.credits_held
+        await create_credit_transaction(
+            db=db,
+            user_id=user.id,
+            type="refund",
+            amount=job.credits_held,
+            job_id=job.id,
+            note="Credits refunded due to cancellation",
+        )
         job.credits_held = 0
 
+    # Audit log
+    db.add(AuditLog(
+        id=str(ULID()), user_id=user.id, action="generation_cancelled",
+        resource_type="generation", resource_id=job.id,
+    ))
     await db.flush()
     return {"id": job.id, "status": "cancelled", "message": "Generation cancelled, credits refunded."}

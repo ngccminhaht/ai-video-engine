@@ -1,16 +1,15 @@
-"""User-facing endpoints — dashboard, profile, usage."""
+"""User-facing endpoints — dashboard, profile."""
 
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.dependencies.auth import get_current_user
 from apps.api.schemas.auth_schemas import UserResponse
-from apps.api.services.auth_service import hash_password, verify_password
 from core.auth.models import User
 from core.database import get_db
 from core.job_queue.models import Job
@@ -68,13 +67,13 @@ async def get_user_dashboard(
     # Stats
     total = await db.scalar(
         select(func.count()).select_from(Job).where(
-            Job.user_id == user.id, Job.is_deleted == False
+            Job.user_id == user.id, not Job.is_deleted
         )
     ) or 0
 
     completed = await db.scalar(
         select(func.count()).select_from(Job).where(
-            Job.user_id == user.id, Job.status == "completed", Job.is_deleted == False
+            Job.user_id == user.id, Job.status == "completed", not Job.is_deleted
         )
     ) or 0
 
@@ -82,13 +81,13 @@ async def get_user_dashboard(
         select(func.count()).select_from(Job).where(
             Job.user_id == user.id,
             Job.status.in_(["pending", "queued", "loading_model", "processing", "post_processing"]),
-            Job.is_deleted == False,
+            not Job.is_deleted,
         )
     ) or 0
 
     failed = await db.scalar(
         select(func.count()).select_from(Job).where(
-            Job.user_id == user.id, Job.status == "failed", Job.is_deleted == False
+            Job.user_id == user.id, Job.status == "failed", not Job.is_deleted
         )
     ) or 0
 
@@ -106,7 +105,7 @@ async def get_user_dashboard(
         .where(
             Job.user_id == user.id,
             Job.status.in_(["pending", "queued", "loading_model", "processing", "post_processing"]),
-            Job.is_deleted == False,
+            not Job.is_deleted,
         )
         .order_by(Job.created_at.desc())
         .limit(10)
@@ -130,7 +129,7 @@ async def get_user_dashboard(
         .where(
             Job.user_id == user.id,
             Job.status == "completed",
-            Job.is_deleted == False,
+            not Job.is_deleted,
         )
         .order_by(Job.completed_at.desc())
         .limit(5)
@@ -178,27 +177,3 @@ async def update_profile(
     await db.flush()
     await db.refresh(user)
     return user
-
-
-# --- Password Change ---
-
-
-class PasswordChangeRequest(BaseModel):
-    current_password: str = Field(..., min_length=1)
-    new_password: str = Field(..., min_length=8, max_length=128)
-
-
-@router.post("/me/change-password")
-async def change_password(
-    data: PasswordChangeRequest,
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """Change password (requires current password verification)."""
-    if not verify_password(data.current_password, user.password_hash):
-        raise HTTPException(status_code=400, detail="Current password is incorrect")
-
-    user.password_hash = hash_password(data.new_password)
-    await db.flush()
-
-    return {"message": "Password changed successfully"}

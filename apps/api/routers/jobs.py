@@ -1,4 +1,4 @@
-"""Job management API endpoints."""
+"""Job management API endpoints (admin/internal)."""
 
 import logging
 
@@ -7,12 +7,14 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from ulid import ULID
 
+from apps.api.dependencies.auth import require_admin
 from apps.api.schemas.job_schemas import (
     JobCancelResponse,
     JobCreate,
     JobListResponse,
     JobResponse,
 )
+from core.auth.models import User
 from core.database import get_db
 from core.job_queue import enqueue_job
 from core.job_queue.models import Job
@@ -23,7 +25,11 @@ router = APIRouter()
 
 
 @router.post("", response_model=JobResponse, status_code=201)
-async def create_job(data: JobCreate, db: AsyncSession = Depends(get_db)):
+async def create_job(
+    data: JobCreate,
+    admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
     """
     Create a new video generation job.
 
@@ -66,6 +72,7 @@ async def create_job(data: JobCreate, db: AsyncSession = Depends(get_db)):
 
 @router.get("", response_model=JobListResponse)
 async def list_jobs(
+    admin: User = Depends(require_admin),
     status: str | None = Query(default=None, description="Filter by status"),
     task_type: str | None = Query(default=None, description="Filter by task_type"),
     model_id: str | None = Query(default=None, description="Filter by model_id"),
@@ -96,7 +103,7 @@ async def list_jobs(
 
 
 @router.get("/{job_id}", response_model=JobResponse)
-async def get_job(job_id: str, db: AsyncSession = Depends(get_db)):
+async def get_job(job_id: str, admin: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
     """Get a specific job by ID."""
     job = await db.get(Job, job_id)
     if not job:
@@ -105,7 +112,7 @@ async def get_job(job_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/{job_id}/cancel", response_model=JobCancelResponse)
-async def cancel_job(job_id: str, db: AsyncSession = Depends(get_db)):
+async def cancel_job(job_id: str, admin: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
     """
     Cancel a job.
 

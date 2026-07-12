@@ -1,14 +1,13 @@
 """Admin worker management endpoints — drain, enable, disable."""
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 from ulid import ULID
 
 from apps.api.dependencies.auth import require_admin
-from core.auth.models import User
-from sqlalchemy.ext.asyncio import AsyncSession
-from core.database import get_db
 from core.audit.models import AuditLog
+from core.auth.models import User
+from core.database import get_db
 
 router = APIRouter()
 

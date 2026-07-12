@@ -60,7 +60,7 @@ async def get_generation_options(
     # Fetch public, available models
     result = await db.execute(
         select(AIModel).where(
-            AIModel.is_public == True,
+            AIModel.is_public,
             AIModel.status.in_(["available", "loaded"]),
         )
     )

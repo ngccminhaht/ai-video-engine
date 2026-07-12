@@ -9,10 +9,10 @@ from ulid import ULID
 
 from apps.api.dependencies.auth import get_current_user
 from core.auth.models import User
+from core.billing.service import create_credit_transaction
 from core.database import get_db
 from core.job_queue import enqueue_job
 from core.job_queue.models import Job
-from core.storage import get_storage_service
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +111,17 @@ async def duplicate_generation(
     user.credits -= credit_cost
 
     new_id = str(ULID())
+
+    # Record credit hold transaction
+    await create_credit_transaction(
+        db=db,
+        user_id=user.id,
+        type="hold",
+        amount=-credit_cost,
+        job_id=new_id,
+        note="Credit hold for duplicate generation",
+    )
+
     new_job = Job(
         id=new_id,
         task_type=job.task_type,
@@ -164,6 +175,17 @@ async def generate_variation(
     user.credits -= credit_cost
 
     new_id = str(ULID())
+
+    # Record credit hold transaction
+    await create_credit_transaction(
+        db=db,
+        user_id=user.id,
+        type="hold",
+        amount=-credit_cost,
+        job_id=new_id,
+        note="Credit hold for variation generation",
+    )
+
     new_job = Job(
         id=new_id,
         task_type=job.task_type,

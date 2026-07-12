@@ -2,14 +2,14 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.dependencies.auth import get_current_user
 from core.auth.models import User
-from core.billing.models import CreditTransaction, Subscription, UsageRecord
+from core.billing.models import CreditTransaction, Subscription
 from core.database import get_db
 from core.job_queue.models import Job
 

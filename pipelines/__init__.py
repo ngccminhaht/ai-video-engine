@@ -138,9 +138,9 @@ class GenerationStep(PipelineStep):
         super().__init__("generation")
 
     async def execute(self, context: PipelineContext) -> StepResult:
+        from apps.api.config import get_settings
         from model_adapters import get_adapter_instance
         from model_adapters.base import GenerationRequest, TaskType
-        from apps.api.config import get_settings
 
         settings = get_settings()
 
@@ -207,7 +207,8 @@ class PostProcessStep(PipelineStep):
 
     async def execute(self, context: PipelineContext) -> StepResult:
         import os
-        from postprocessing.ffmpeg import get_ffmpeg_processor, PostProcessConfig
+
+        from postprocessing.ffmpeg import PostProcessConfig, get_ffmpeg_processor
 
         processor = get_ffmpeg_processor()
         if not processor.is_available:
@@ -267,6 +268,7 @@ class ThumbnailStep(PipelineStep):
 
     async def execute(self, context: PipelineContext) -> StepResult:
         import os
+
         from postprocessing.ffmpeg import get_ffmpeg_processor
 
         processor = get_ffmpeg_processor()

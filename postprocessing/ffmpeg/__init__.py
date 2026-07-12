@@ -18,8 +18,7 @@ import asyncio
 import logging
 import os
 import shutil
-from dataclasses import dataclass, field
-from pathlib import Path
+from dataclasses import dataclass
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -345,14 +344,6 @@ class FFmpegProcessor:
         info = await self.get_video_info(input_path)
         target_w = info.width * scale_factor
         target_h = info.height * scale_factor
-
-        config = PostProcessConfig(
-            target_width=target_w,
-            target_height=target_h,
-            maintain_aspect=False,
-            preset="slow",
-            crf=20,  # Higher quality for upscaling
-        )
 
         # Use lanczos filter for better upscaling
         cmd = [

@@ -8,18 +8,17 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-
 from apps.api.config import get_settings
+from core.assets.models import Asset  # noqa: F401
+from core.audit.models import AuditLog  # noqa: F401
+from core.auth.models import RefreshToken, User  # noqa: F401
+from core.billing.models import CreditTransaction, Subscription, UsageRecord  # noqa: F401
 from core.database import Base
+from core.job_queue.models import Job  # noqa: F401
 
 # Import all models so Alembic can detect them
 from core.model_registry.models import AIModel  # noqa: F401
-from core.job_queue.models import Job  # noqa: F401
-from core.auth.models import User, RefreshToken  # noqa: F401
-from core.projects.models import Project, GenerationOutput  # noqa: F401
-from core.assets.models import Asset  # noqa: F401
-from core.audit.models import AuditLog  # noqa: F401
-from core.billing.models import UsageRecord, CreditTransaction, Subscription  # noqa: F401
+from core.projects.models import GenerationOutput, Project  # noqa: F401
 
 config = context.config
 

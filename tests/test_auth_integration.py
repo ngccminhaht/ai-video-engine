@@ -1,4 +1,4 @@
-"""
+r"""
 Integration tests for Phase 1 Auth system.
 
 Tests the full flow: register → login → access protected endpoint → refresh → logout.
@@ -7,9 +7,8 @@ Also verifies role-based access control.
 Run with: .venv\Scripts\python.exe -m pytest tests/test_auth_integration.py -v
 """
 
-import asyncio
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

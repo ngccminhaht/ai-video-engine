@@ -1,15 +1,17 @@
-"""Model registry CRUD endpoints."""
+"""Model registry CRUD endpoints (admin only)."""
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from apps.api.dependencies.auth import require_admin
 from apps.api.schemas.model_schemas import (
     ModelCreate,
     ModelListResponse,
     ModelResponse,
     ModelUpdate,
 )
+from core.auth.models import User
 from core.database import get_db
 from core.model_registry.models import AIModel
 
@@ -17,7 +19,11 @@ router = APIRouter()
 
 
 @router.post("", response_model=ModelResponse, status_code=201)
-async def register_model(data: ModelCreate, db: AsyncSession = Depends(get_db)):
+async def register_model(
+    data: ModelCreate,
+    admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
     """Register a new AI model."""
     # Check if model ID already exists
     existing = await db.get(AIModel, data.id)
@@ -33,6 +39,7 @@ async def register_model(data: ModelCreate, db: AsyncSession = Depends(get_db)):
 
 @router.get("", response_model=ModelListResponse)
 async def list_models(
+    admin: User = Depends(require_admin),
     status: str | None = Query(default=None, description="Filter by status"),
     capability: str | None = Query(default=None, description="Filter by capability"),
     skip: int = Query(default=0, ge=0),
@@ -58,7 +65,7 @@ async def list_models(
 
 
 @router.get("/{model_id}", response_model=ModelResponse)
-async def get_model(model_id: str, db: AsyncSession = Depends(get_db)):
+async def get_model(model_id: str, admin: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
     """Get a specific model by ID."""
     model = await db.get(AIModel, model_id)
     if not model:
@@ -67,7 +74,12 @@ async def get_model(model_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.patch("/{model_id}", response_model=ModelResponse)
-async def update_model(model_id: str, data: ModelUpdate, db: AsyncSession = Depends(get_db)):
+async def update_model(
+    model_id: str,
+    data: ModelUpdate,
+    admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
     """Update a model (partial update)."""
     model = await db.get(AIModel, model_id)
     if not model:
@@ -83,7 +95,7 @@ async def update_model(model_id: str, data: ModelUpdate, db: AsyncSession = Depe
 
 
 @router.delete("/{model_id}", status_code=204)
-async def delete_model(model_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_model(model_id: str, admin: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
     """Delete a model from registry."""
     model = await db.get(AIModel, model_id)
     if not model:

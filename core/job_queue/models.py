@@ -47,6 +47,9 @@ class Job(Base):
     retry_count: Mapped[int] = mapped_column(Integer, default=0)
     max_retries: Mapped[int] = mapped_column(Integer, default=2)
 
+    # Idempotency
+    idempotency_key: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
     # Performance tracking
     queue_time_seconds: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     load_model_time_seconds: Mapped[Optional[float]] = mapped_column(Float, nullable=True)

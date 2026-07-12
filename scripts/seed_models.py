@@ -7,11 +7,10 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from sqlalchemy import select
 
-from core.database import async_session_factory, engine, Base
-from core.model_registry.models import AIModel
+from core.database import async_session_factory, engine
 from core.job_queue.models import Job  # noqa: F401
+from core.model_registry.models import AIModel
 
 SEED_MODELS = [
     {

@@ -2,10 +2,9 @@
 
 from fastapi import APIRouter
 
-from apps.api.routers.admin import users as admin_users
+from apps.api.routers.admin import admin_models, admin_workers
 from apps.api.routers.admin import logs as admin_logs
-from apps.api.routers.admin import admin_models
-from apps.api.routers.admin import admin_workers
+from apps.api.routers.admin import users as admin_users
 
 router = APIRouter()
 router.include_router(admin_users.router, prefix="/users", tags=["Admin Users"])

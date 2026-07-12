@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { AuthGuard } from "@/lib/auth/guard";
 import { useAuth } from "@/lib/auth/provider";
+import { RoleSwitcher } from "@/components/layout/role-switcher";
 
 const navItems = [
   { title: "Dashboard", href: "/app", icon: LayoutDashboard },
@@ -83,6 +84,9 @@ function AppHeader() {
 
         {/* Spacer */}
         <div className="flex-1" />
+
+        {/* Role Switcher (admin only) */}
+        <RoleSwitcher />
 
         {/* Credits */}
         {user && (

@@ -11,7 +11,6 @@ Architecture: Abstract StorageBackend interface allows switching to S3/MinIO lat
 """
 
 import logging
-import os
 import shutil
 import uuid
 from datetime import datetime, timezone

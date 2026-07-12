@@ -23,7 +23,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from model_adapters.base import (
     AdapterStatus,
@@ -69,7 +69,7 @@ class CogVideoXAdapter(BaseModelAdapter):
     async def load_model(self) -> None:
         """Load CogVideoX pipeline into GPU memory."""
         import torch
-        from diffusers import CogVideoXPipeline, CogVideoXImageToVideoPipeline
+        from diffusers import CogVideoXImageToVideoPipeline, CogVideoXPipeline
 
         self._status = AdapterStatus.LOADING
         model_path = self.config["model_path"]

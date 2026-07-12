@@ -1,12 +1,14 @@
-"""Workers & Monitoring API endpoints."""
+"""Workers & Monitoring API endpoints (admin only)."""
 
 import logging
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from apps.api.dependencies.auth import require_admin
+from core.auth.models import User
 from core.database import get_db
 from core.job_queue.models import Job
 from core.model_registry.models import AIModel
@@ -65,7 +67,7 @@ class DashboardStatsResponse(BaseModel):
 
 
 @router.get("/workers", response_model=list[WorkerResponse])
-async def list_workers():
+async def list_workers(admin: User = Depends(require_admin)):
     """
     List active workers with GPU status.
 
@@ -77,7 +79,7 @@ async def list_workers():
 
 
 @router.get("/stats", response_model=DashboardStatsResponse)
-async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
+async def get_dashboard_stats(admin: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
     """
     Get aggregated dashboard statistics.
 

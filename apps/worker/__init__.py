@@ -100,6 +100,7 @@ async def _finalize_credits(session, job: Job, success: bool) -> None:
         return
 
     from core.auth.models import User
+    from core.billing.service import create_credit_transaction
 
     user = await session.get(User, job.user_id)
     if not user:
@@ -109,10 +110,26 @@ async def _finalize_credits(session, job: Job, success: bool) -> None:
         # Transfer held → charged
         job.credits_charged = job.credits_held
         job.credits_held = 0
+        await create_credit_transaction(
+            db=session,
+            user_id=job.user_id,
+            type="charge",
+            amount=-job.credits_charged,
+            job_id=job.id,
+            note="Credits charged for completed generation",
+        )
         logger.info(f"[Worker] Charged {job.credits_charged} credits for job {job.id}")
     else:
         # Refund held credits
         user.credits += job.credits_held
+        await create_credit_transaction(
+            db=session,
+            user_id=job.user_id,
+            type="refund",
+            amount=job.credits_held,
+            job_id=job.id,
+            note="Credits refunded due to job failure",
+        )
         logger.info(f"[Worker] Refunded {job.credits_held} credits for job {job.id}")
         job.credits_held = 0
 

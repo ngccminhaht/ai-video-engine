@@ -120,8 +120,8 @@ async def main():
         session.add(job)
         await session.commit()
         print(f"  [OK] Job created: {job_id}")
-        print(f"       Task: text_to_video")
-        print(f"       Model: mock-test-model")
+        print("       Task: text_to_video")
+        print("       Model: mock-test-model")
         print(f"       Prompt: '{job.inputs['prompt'][:50]}...'")
 
     # ── Step 5: Run worker function directly ──

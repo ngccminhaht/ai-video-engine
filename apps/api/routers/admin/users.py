@@ -8,7 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from ulid import ULID
 
-from apps.api.dependencies.auth import require_admin, require_super_admin
+from apps.api.dependencies.auth import require_admin
 from core.audit.models import AuditLog
 from core.auth.models import User
 from core.database import get_db

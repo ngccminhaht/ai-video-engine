@@ -17,8 +17,8 @@ import sys
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.database import async_session_factory  # noqa: E402
 from apps.api.services.auth_service import create_user, get_user_by_email  # noqa: E402
+from core.database import async_session_factory  # noqa: E402
 
 
 async def seed_admin():
@@ -44,14 +44,14 @@ async def seed_admin():
             )
             await session.commit()
 
-            print(f"[OK] SUPER_ADMIN created successfully:")
+            print("[OK] SUPER_ADMIN created successfully:")
             print(f"     ID:    {user.id}")
             print(f"     Email: {user.email}")
             print(f"     Name:  {user.name}")
             print(f"     Role:  {user.role}")
-            print(f"")
+            print("")
             print(f"     Login with: {email} / {password}")
-            print(f"     (Change this password in production!)")
+            print("     (Change this password in production!)")
 
         except Exception as e:
             await session.rollback()

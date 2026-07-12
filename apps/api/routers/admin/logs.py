@@ -63,16 +63,16 @@ async def list_audit_logs(
 
     items = [
         AuditLogResponse(
-            id=l.id,
-            user_id=l.user_id,
-            action=l.action,
-            resource_type=l.resource_type,
-            resource_id=l.resource_id,
-            details=l.details,
-            ip_address=l.ip_address,
-            created_at=l.created_at.isoformat() if l.created_at else "",
+            id=log_entry.id,
+            user_id=log_entry.user_id,
+            action=log_entry.action,
+            resource_type=log_entry.resource_type,
+            resource_id=log_entry.resource_id,
+            details=log_entry.details,
+            ip_address=log_entry.ip_address,
+            created_at=log_entry.created_at.isoformat() if log_entry.created_at else "",
         )
-        for l in logs
+        for log_entry in logs
     ]
 
     return AuditLogListResponse(items=items, total=total, page=page, page_size=page_size)
